@@ -30,6 +30,16 @@ static struct gc_pose xc = {
         { 1.0, 2.0, 3.0 } }
 };
 
+static struct ga_twist xda = {
+    .target_body = &body_a, .reference_body = &body_b,
+    .point = &point_a, .frame = &frame_a
+};
+
+static struct gc_twist xdc = {
+    .angular_velocity = (struct vector3 [1]) { { 1.0, 2.0, 3.0 } },
+    .linear_velocity = (struct vector3 [1]) { { 2.0, 3.0, 4.0 } }
+};
+
 
 START_TEST(test_gc_pose_compose)
 {
@@ -102,6 +112,70 @@ START_TEST(test_ga_pose_compose)
 }
 END_TEST
 
+START_TEST(test_gc_twist_tf_ref_to_tgt)
+{
+    struct gc_twist r = {
+        .angular_velocity = (struct vector3 [1]) {},
+        .linear_velocity = (struct vector3 [1]) {} };
+
+    struct vector3 res_ang = { 2.0, 3.0, 1.0 };
+    struct vector3 res_lin = { 3.0, 4.0, 2.0 };
+
+    gc_twist_tf_ref_to_tgt(&xc, &xdc, &r);
+    for (int i = 0; i < 3; i++) {
+        ck_assert_flt_eq(r.angular_velocity->data[i], res_ang.data[i]);
+        ck_assert_flt_eq(r.linear_velocity->data[i], res_lin.data[i]);
+    }
+}
+END_TEST
+
+
+START_TEST(test_ga_twist_tf_ref_to_tgt)
+{
+    struct ga_twist r;
+
+    ga_twist_tf_ref_to_tgt(&xa, &xda, &r);
+    ck_assert_ptr_eq(r.target_body, &body_a);
+    ck_assert_ptr_eq(r.reference_body, &body_b);
+    ck_assert_ptr_eq(r.frame, &frame_b);
+    ck_assert_ptr_eq(r.point, frame_b.origin);
+}
+END_TEST
+
+
+START_TEST(test_gc_twist_accumulate)
+{
+    struct gc_twist r = {
+        .angular_velocity = (struct vector3 [1]) {},
+        .linear_velocity = (struct vector3 [1]) {} };
+
+    struct vector3 res_ang = { 2.0, 4.0, 6.0 };
+    struct vector3 res_lin = { 4.0, 6.0, 8.0 };
+
+    gc_twist_accumulate(&xdc, &xdc, &r);
+    for (int i = 0; i < 3; i++) {
+        ck_assert_flt_eq(r.angular_velocity->data[i], res_ang.data[i]);
+        ck_assert_flt_eq(r.linear_velocity->data[i], res_lin.data[i]);
+    }
+}
+END_TEST
+
+
+START_TEST(test_ga_twist_accumulate)
+{
+    struct ga_twist xd = {
+        .target_body = &body_c, .reference_body = &body_a,
+        .point = &point_a, .frame = &frame_a };
+    struct ga_twist r;
+
+    ga_twist_accumulate(&xda, &xd, &r);
+    ck_assert_ptr_eq(r.target_body, &body_c);
+    ck_assert_ptr_eq(r.reference_body, &body_b);
+    ck_assert_ptr_eq(r.frame, &frame_a);
+    ck_assert_ptr_eq(r.point, frame_a.origin);
+}
+END_TEST
+
 
 TCase *geometry_test()
 {
@@ -109,6 +183,10 @@ TCase *geometry_test()
 
     tcase_add_test(tc, test_gc_pose_compose);
     tcase_add_test(tc, test_ga_pose_compose);
+    tcase_add_test(tc, test_gc_twist_tf_ref_to_tgt);
+    tcase_add_test(tc, test_ga_twist_tf_ref_to_tgt);
+    tcase_add_test(tc, test_gc_twist_accumulate);
+    tcase_add_test(tc, test_ga_twist_accumulate);
 
     return tc;
 }

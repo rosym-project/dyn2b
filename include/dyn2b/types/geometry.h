@@ -48,6 +48,21 @@ struct ga_pose
     struct frame *reference_frame;
 };
 
+
+struct gc_twist
+{
+    struct vector3 *angular_velocity;
+    struct vector3 *linear_velocity;
+};
+
+struct ga_twist
+{
+    struct body *target_body;
+    struct body *reference_body;
+    struct point *point;
+    struct frame *frame;
+};
+
 #ifdef __cplusplus
 }
 #endif
