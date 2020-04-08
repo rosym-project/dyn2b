@@ -25,6 +25,15 @@ void kca_fpk(
         const struct kca_joint *joint,
         struct ga_pose *x);
 
+/**
+ * Forward velocity kinematics (ADT).
+ * 
+ * Xd = S qd
+ */
+void kca_fvk(
+        const struct kca_joint *joint,
+        struct ga_twist *xd);
+
 
 struct kcc_joint_operators
 {
@@ -37,6 +46,16 @@ struct kcc_joint_operators
             const struct kcc_joint *joint,
             const joint_position *q,
             struct gc_pose *x);
+
+    /**
+     * Forward velocity kinematics (coordinates).
+     * 
+     * Xd = S qd
+     */
+    void (*fvk)(
+            const struct kcc_joint *joint,
+            const joint_velocity *qd,
+            struct gc_twist *xd);
 };
 
 

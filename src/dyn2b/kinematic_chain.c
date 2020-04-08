@@ -19,6 +19,21 @@ void kca_fpk(
 }
 
 
+void kca_fvk(
+        const struct kca_joint *joint,
+        struct ga_twist *xd)
+{
+    assert(joint);
+    assert(xd);
+    assert(joint->target_frame);
+
+    xd->target_body = joint->target_body;
+    xd->reference_body = joint->reference_body;
+    xd->point = joint->target_frame->origin;
+    xd->frame = joint->target_frame;
+}
+
+
 static void rev_fpk(
         const struct kcc_joint *joint,
         const joint_position *q,
@@ -75,8 +90,28 @@ static void rev_fpk(
 }
 
 
+static void rev_fvk(
+        const struct kcc_joint *joint,
+        const joint_velocity *qd,
+        struct gc_twist *xd)
+{
+    assert(joint);
+    assert(qd);
+    assert(xd);
+    assert(xd->angular_velocity);
+
+    memset(xd->linear_velocity, 0, sizeof(*xd->linear_velocity));
+
+    enum joint_axis axis = joint->revolute_joint.axis;
+    xd->angular_velocity->x = (axis == JOINT_AXIS_X) ? qd[0] : 0.0;
+    xd->angular_velocity->y = (axis == JOINT_AXIS_Y) ? qd[0] : 0.0;
+    xd->angular_velocity->z = (axis == JOINT_AXIS_Z) ? qd[0] : 0.0;
+}
+
+
 const struct kcc_joint_operators kcc_joint[] = {
     [JOINT_TYPE_REVOLUTE] = {
-        .fpk = rev_fpk
+        .fpk = rev_fpk,
+        .fvk = rev_fvk
     }
 };
