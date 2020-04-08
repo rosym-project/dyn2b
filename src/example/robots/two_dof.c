@@ -57,7 +57,12 @@ struct kca_segment two_dof_robot_segments_a[] = {
             .reference_body = &two_dof.link_0
         },
         .link = {
-            .root_frame = &two_dof.link_1_root
+            .root_frame = &two_dof.link_1_root,
+            .inertia = {
+                .frame = &two_dof.link_1_root,
+                .point = &two_dof.link_1_root_origin,
+                .body = &two_dof.link_1
+            }
         }
     },
     {
@@ -74,7 +79,12 @@ struct kca_segment two_dof_robot_segments_a[] = {
             .reference_body = &two_dof.link_1
         },
         .link = {
-            .root_frame = &two_dof.link_2_root
+            .root_frame = &two_dof.link_2_root,
+            .inertia = {
+                .frame = &two_dof.link_2_root,
+                .point = &two_dof.link_2_root_origin,
+                .body = &two_dof.link_2
+            }
         }
     }
 };
@@ -92,10 +102,21 @@ struct kcc_segment two_dof_robot_segments_c[] = {
         .joint = {
             .type = JOINT_TYPE_REVOLUTE,
             .revolute_joint = {
-                .axis = JOINT_AXIS_Z
+                .axis = JOINT_AXIS_Z,
+                .inertia = (double[]) { 1.0 }
             }
         },
-        .link = {}
+        .link = {
+            .inertia = {
+                .zeroth_moment_of_mass = 2.0,
+                .first_moment_of_mass = { 2.0, 0.0, 0.0 },      // [1.0, 0.0, 0.0] * 2.0
+                .second_moment_of_mass = {
+                    .row_x = { 0.0, 0.0, 0.0 },
+                    .row_y = { 0.0, 2.0, 0.0 },
+                    .row_z = { 0.0, 0.0, 2.0 }
+                }
+            }
+        }
     },
     {
         .joint_attachment = {
@@ -109,10 +130,21 @@ struct kcc_segment two_dof_robot_segments_c[] = {
         .joint = {
             .type = JOINT_TYPE_REVOLUTE,
             .revolute_joint = {
-                .axis = JOINT_AXIS_Z
+                .axis = JOINT_AXIS_Z,
+                .inertia = (double[]) { 1.0 }
             }
         },
-        .link = {}
+        .link = {
+            .inertia = {
+                .zeroth_moment_of_mass = 2.0,
+                .first_moment_of_mass = { 2.0, 0.0, 0.0 },      // [1.0, 0.0, 0.0] * 2.0
+                .second_moment_of_mass = {
+                    .row_x = { 0.0, 0.0, 0.0 },
+                    .row_y = { 0.0, 2.0, 0.0 },
+                    .row_z = { 0.0, 0.0, 2.0 }
+                }
+            }
+        }
     }
 };
 

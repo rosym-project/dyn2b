@@ -2,6 +2,7 @@
 #define DYN2B_TYPES_KINEMATIC_CHAIN_H
 
 #include <dyn2b/types/geometry.h>
+#include <dyn2b/types/mechanics.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -11,6 +12,7 @@ extern "C" {
 typedef double joint_position;
 typedef double joint_velocity;
 typedef double joint_acceleration;
+typedef double joint_inertia;
 
 
 enum joint_type
@@ -28,6 +30,7 @@ enum joint_axis
 struct kcc_revolute_joint
 {
     enum joint_axis axis;
+    joint_inertia *inertia;
 };
 
 struct kcc_joint
@@ -50,11 +53,13 @@ struct kca_joint
 
 struct kcc_link
 {
+    struct mc_rbi inertia;
 };
 
 struct kca_link
 {
     struct frame *root_frame;
+    struct ma_rbi inertia;
 };
 
 struct kcc_segment
