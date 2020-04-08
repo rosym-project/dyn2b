@@ -1,12 +1,14 @@
 #include <check.h>
 
 extern TCase *linear_algebra_test();
+extern TCase *geometry_test();
 
 
 int main(int argc, char **argv)
 {
     Suite *s = suite_create("Core");
     suite_add_tcase(s, linear_algebra_test());
+    suite_add_tcase(s, geometry_test());
 
     SRunner *sr = srunner_create(s);
 

@@ -1,6 +1,7 @@
 add_executable(main_test
   main_test.c
   linear_algebra_test.c
+  geometry_test.c
 )
 
 target_link_libraries(main_test
