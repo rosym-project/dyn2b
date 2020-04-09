@@ -54,6 +54,15 @@ void kca_inertial_acceleration(
         struct ga_acc_twist *xdd);
 
 /**
+ * Inverse force kinematics (ADT).
+ *
+ * tau = S^T F
+ */
+void kca_ifk(
+        const struct kca_joint *joint,
+        const struct ma_wrench *f);
+
+/**
  * Project inertia over a joint (ADT).
  *
  * M^a = P^T M^A
@@ -118,6 +127,17 @@ struct kcc_joint_operators
             const struct gc_twist *xd,
             const joint_velocity *qd,
             struct gc_acc_twist *xdd);
+
+    /**
+     * Inverse force kinematics on <count> wrenches (coordinates).
+     *
+     * tau[i] = S^T F[i]
+     */
+    void (*ifk)(
+            const struct kcc_joint *joint,
+            const struct mc_wrench *f,
+            joint_torque *tau,
+            int count);
 
     /**
      * Project inertia over a joint (coordinates).

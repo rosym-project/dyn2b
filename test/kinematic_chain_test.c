@@ -123,6 +123,13 @@ START_TEST(test_kca_inertial_acceleration)
 END_TEST
 
 
+START_TEST(test_kca_ifk)
+{
+    kca_ifk(&ja, &fa);
+}
+END_TEST
+
+
 START_TEST(test_kca_project_inertia)
 {
     struct ma_abi m;
@@ -346,6 +353,34 @@ START_TEST(test_rev_inertial_acceleration)
 END_TEST
 
 
+START_TEST(test_rev_ifk)
+{
+    struct kcc_joint joint = { .type = JOINT_TYPE_REVOLUTE };
+    joint_torque tau[2] = { 0.0, 0.0 };
+
+    joint_torque res_x[2] = { 1.0, 2.0 };
+
+    joint.revolute_joint.axis = JOINT_AXIS_X;
+    kcc_joint[JOINT_TYPE_REVOLUTE].ifk(&joint, &fc, tau, 2);
+    for (int i = 0; i < 2; i++) ck_assert_flt_eq(tau[i], res_x[i]);
+
+
+    joint_torque res_y[2] = { 2.0, 4.0 };
+
+    joint.revolute_joint.axis = JOINT_AXIS_Y;
+    kcc_joint[JOINT_TYPE_REVOLUTE].ifk(&joint, &fc, tau, 2);
+    for (int i = 0; i < 2; i++) ck_assert_flt_eq(tau[i], res_y[i]);
+
+
+    joint_torque res_z[2] = { 3.0, 6.0 };
+
+    joint.revolute_joint.axis = JOINT_AXIS_Z;
+    kcc_joint[JOINT_TYPE_REVOLUTE].ifk(&joint, &fc, tau, 2);
+    for (int i = 0; i < 2; i++) ck_assert_flt_eq(tau[i], res_z[i]);
+}
+END_TEST
+
+
 START_TEST(test_rev_project_inertia)
 {
     struct kcc_joint joint = {
@@ -487,12 +522,14 @@ TCase *kinematic_chain_test()
     tcase_add_test(tc, test_kca_fvk);
     tcase_add_test(tc, test_kca_fak);
     tcase_add_test(tc, test_kca_inertial_acceleration);
+    tcase_add_test(tc, test_kca_ifk);
     tcase_add_test(tc, test_kca_project_inertia);
     tcase_add_test(tc, test_kca_project_wrench);
     tcase_add_test(tc, test_rev_fpk);
     tcase_add_test(tc, test_rev_fvk);
     tcase_add_test(tc, test_rev_fak);
     tcase_add_test(tc, test_rev_inertial_acceleration);
+    tcase_add_test(tc, test_rev_ifk);
     tcase_add_test(tc, test_rev_project_inertia);
     tcase_add_test(tc, test_rev_project_wrench);
 

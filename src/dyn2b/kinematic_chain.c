@@ -69,6 +69,19 @@ void kca_inertial_acceleration(
 }
 
 
+void kca_ifk(
+        const struct kca_joint *joint,
+        const struct ma_wrench *f)
+{
+    assert(joint);
+    assert(f);
+    assert(f->frame);
+    assert(f->point == f->frame->origin);       // wrench
+    assert(joint->target_body == f->body);
+    assert(joint->target_frame == f->frame);
+}
+
+
 void kca_project_inertia(
         const struct kca_joint *joint,
         const struct ma_abi *m,
@@ -267,6 +280,24 @@ static void rev_inertial_acceleration(
 }
 
 
+static void rev_ifk(
+        const struct kcc_joint *joint,
+        const struct mc_wrench *f,
+        joint_torque *tau,
+        int count)
+{
+    assert(joint);
+    assert(f);
+    assert(tau);
+
+    int k = joint->revolute_joint.axis;
+
+    for (int i = 0; i < count; i++) {
+        tau[i] = f->torque[i].data[k];
+    }
+}
+
+
 static void rev_project_inertia(
         const struct kcc_joint *joint,
         const struct mc_abi *m,
@@ -360,6 +391,7 @@ const struct kcc_joint_operators kcc_joint[] = {
         .fvk = rev_fvk,
         .fak = rev_fak,
         .inertial_acceleration = rev_inertial_acceleration,
+        .ifk = rev_ifk,
         .project_inertia = rev_project_inertia,
         .project_wrench = rev_project_wrench
     }

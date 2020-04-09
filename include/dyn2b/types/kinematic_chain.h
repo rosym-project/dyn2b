@@ -12,6 +12,7 @@ extern "C" {
 typedef double joint_position;
 typedef double joint_velocity;
 typedef double joint_acceleration;
+typedef double joint_torque;
 typedef double joint_inertia;
 
 
