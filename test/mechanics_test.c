@@ -42,6 +42,25 @@ static const struct mc_wrench fc = {
         { 8.0, 10.0, 12.0 } }
 };
 
+static struct ma_abi ma = {
+    .body = &body_b, .point = &point_b, .frame = &frame_b
+};
+
+static struct mc_abi mc = {
+    .zeroth_moment_of_mass = {
+        .row_x = { 2.0, 0.0, 0.0 },
+        .row_y = { 0.0, 3.0, 0.0 },
+        .row_z = { 0.0, 0.0, 4.0 } },
+    .first_moment_of_mass = {
+        .row_x = { 4.0, 0.0, 0.0 },
+        .row_y = { 0.0, 5.0, 0.0 },
+        .row_z = { 0.0, 0.0, 6.0 } },
+    .second_moment_of_mass = {
+        .row_x = { 3.0, 4.0, 5.0 },
+        .row_y = { 4.0, 6.0, 7.0 },
+        .row_z = { 5.0, 7.0, 8.0 } }
+};
+
 
 START_TEST(test_mc_wrench_tf_tgt_to_ref)
 {
@@ -136,6 +155,141 @@ START_TEST(test_ma_wrench_sub)
 END_TEST
 
 
+START_TEST(test_mc_rbi_to_abi)
+{
+    struct mc_rbi m = {
+        .zeroth_moment_of_mass = 2.0,
+        .first_moment_of_mass = { 4.0, 6.0, 8.0 },
+        .second_moment_of_mass = {
+            .row_x = { 3.0, 4.0, 5.0 },
+            .row_y = { 4.0, 6.0, 7.0 },
+            .row_z = { 5.0, 7.0, 8.0 } } };
+    struct mc_abi r;
+
+    struct matrix3x3 res_m2 = {
+            .row_x = { 3.0, 4.0, 5.0 },
+            .row_y = { 4.0, 6.0, 7.0 },
+            .row_z = { 5.0, 7.0, 8.0 } };
+    struct matrix3x3 res_m1 = {
+        .row_x = {  0.0, -8.0,  6.0 },
+        .row_y = {  8.0,  0.0, -4.0 },
+        .row_z = { -6.0,  4.0,  0.0 } };
+    struct matrix3x3 res_m0 = {
+        .row_x = { 2.0, 0.0, 0.0 },
+        .row_y = { 0.0, 2.0, 0.0 },
+        .row_z = { 0.0, 0.0, 2.0 } };
+
+    mc_rbi_to_abi(&m, &r);
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            ck_assert_flt_eq(r.second_moment_of_mass.row[i].data[j], res_m2.row[i].data[j]);
+            ck_assert_flt_eq(r.first_moment_of_mass.row[i].data[j], res_m1.row[i].data[j]);
+            ck_assert_flt_eq(r.zeroth_moment_of_mass.row[i].data[j], res_m0.row[i].data[j]);
+        }
+    }
+}
+END_TEST
+
+
+START_TEST(test_ma_rbi_to_abi)
+{
+    struct ma_rbi m = {
+        .body = &body_a,
+        .point = &point_a,
+        .frame = &frame_a
+    };
+    struct ma_abi r;
+
+    ma_rbi_to_abi(&m, &r);
+    ck_assert_ptr_eq(r.body, &body_a);
+    ck_assert_ptr_eq(r.point, &point_a);
+    ck_assert_ptr_eq(r.frame, &frame_a);
+}
+END_TEST
+
+
+START_TEST(test_mc_abi_tf_tgt_to_ref)
+{
+    struct mc_abi m;
+
+    struct matrix3x3 res_m = {
+        .row_x = { 4.0, 0.0, 0.0 },
+        .row_y = { 0.0, 2.0, 0.0 },
+        .row_z = { 0.0, 0.0, 3.0 } };
+    struct matrix3x3 res_h = {
+        .row_x = {   6.0, -6.0,  6.0 },
+        .row_y = {  12.0,  4.0, -3.0 },
+        .row_z = { - 8.0,  2.0,  5.0 } };
+    struct matrix3x3 res_i = {
+        .row_x = {  38.0,   5.0, - 1.0 },
+        .row_y = {   5.0,  42.0, -21.0 },
+        .row_z = { - 1.0, -21.0,  24.0 } };
+
+    mc_abi_tf_tgt_to_ref(&xc, &mc, &m);
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            ck_assert_flt_eq(m.zeroth_moment_of_mass.row[i].data[j], res_m.row[i].data[j]);
+            ck_assert_flt_eq(m.first_moment_of_mass.row[i].data[j], res_h.row[i].data[j]);
+            ck_assert_flt_eq(m.second_moment_of_mass.row[i].data[j], res_i.row[i].data[j]);
+        }
+    }
+}
+END_TEST
+
+
+START_TEST(test_ma_abi_tf_tgt_to_ref)
+{
+    struct ma_abi m;
+
+    ma_abi_tf_tgt_to_ref(&xa, &ma, &m);
+    ck_assert_ptr_eq(m.point, frame_a.origin);
+    ck_assert_ptr_eq(m.body, &body_b);
+    ck_assert_ptr_eq(m.frame, &frame_a);
+}
+END_TEST
+
+
+START_TEST(test_mc_abi_add)
+{
+    struct mc_abi r;
+
+    struct matrix3x3 res_m2 = {
+        .row_x = {  6.0,  8.0, 10.0 },
+        .row_y = {  8.0, 12.0, 14.0 },
+        .row_z = { 10.0, 14.0, 16.0 } };
+    struct matrix3x3 res_m1 = {
+        .row_x = { 8.0,  0.0, 0.0 },
+        .row_y = { 0.0, 10.0, 0.0 },
+        .row_z = { 0.0,  0.0, 12.0 } };
+    struct matrix3x3 res_m0 = {
+        .row_x = { 4.0, 0.0, 0.0 },
+        .row_y = { 0.0, 6.0, 0.0 },
+        .row_z = { 0.0, 0.0, 8.0 } };
+
+    mc_abi_add(&mc, &mc, &r);
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            ck_assert_flt_eq(r.second_moment_of_mass.row[i].data[j], res_m2.row[i].data[j]);
+            ck_assert_flt_eq(r.first_moment_of_mass.row[i].data[j], res_m1.row[i].data[j]);
+            ck_assert_flt_eq(r.zeroth_moment_of_mass.row[i].data[j], res_m0.row[i].data[j]);
+        }
+    }
+}
+END_TEST
+
+
+START_TEST(test_ma_abi_add)
+{
+    struct ma_abi m;
+
+    ma_abi_add(&ma, &ma, &m);
+    ck_assert_ptr_eq(m.body, &body_b);
+    ck_assert_ptr_eq(m.point, &point_b);
+    ck_assert_ptr_eq(m.frame, &frame_b);
+}
+END_TEST
+
+
 TCase *mechanics_test()
 {
     TCase *tc = tcase_create("Mechanics");
@@ -146,6 +300,12 @@ TCase *mechanics_test()
     tcase_add_test(tc, test_ma_wrench_add);
     tcase_add_test(tc, test_mc_wrench_sub);
     tcase_add_test(tc, test_ma_wrench_sub);
+    tcase_add_test(tc, test_mc_rbi_to_abi);
+    tcase_add_test(tc, test_ma_rbi_to_abi);
+    tcase_add_test(tc, test_mc_abi_tf_tgt_to_ref);
+    tcase_add_test(tc, test_ma_abi_tf_tgt_to_ref);
+    tcase_add_test(tc, test_mc_abi_add);
+    tcase_add_test(tc, test_ma_abi_add);
 
     return tc;
 }

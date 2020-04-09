@@ -182,6 +182,41 @@ void ma_wrench_log(
 }
 
 
+void mc_rbi_to_abi(
+        const struct mc_rbi *rbi,
+        struct mc_abi *r)
+{
+    assert(rbi);
+    assert(r);
+
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            r->zeroth_moment_of_mass.row[i].data[j] = 0.0;
+            r->first_moment_of_mass.row[i].data[j] = 0.0;
+            r->second_moment_of_mass.row[i].data[j]
+                    = rbi->second_moment_of_mass.row[i].data[j];
+        }
+        r->zeroth_moment_of_mass.row[i].data[i] = rbi->zeroth_moment_of_mass;
+    }
+    la_dcrossop(
+            (double *)&rbi->first_moment_of_mass, 1,
+            (double *)&r->first_moment_of_mass, 3);
+}
+
+
+void ma_rbi_to_abi(
+        const struct ma_rbi *rbi,
+        struct ma_abi *r)
+{
+    assert(rbi);
+    assert(r);
+
+    r->body = rbi->body;
+    r->point = rbi->point;
+    r->frame = rbi->frame;
+}
+
+
 void mc_rbi_log(
         const struct mc_rbi *m)
 {
@@ -211,6 +246,178 @@ void ma_rbi_log(
     assert(m->frame);
 
     printf("RigidBodyInertiaADT(point=%s|%s, frame={%s})\n",
+        m->point->name,
+        m->body->name,
+        m->frame->name);
+}
+
+
+void mc_abi_tf_tgt_to_ref(
+        const struct gc_pose *x,
+        const struct mc_abi *m,
+        struct mc_abi *r)
+{
+    assert(x);
+    assert(m);
+    assert(r);
+    assert(m != r);
+
+    // M' = E^T M E
+    struct matrix3x3 me;
+    la_dgemm_nnos(3, 3, 3,
+            (double *)&m->zeroth_moment_of_mass, 3,
+            (double *)x->rotation, 3,
+            (double *)&me, 3);
+    la_dgemm_tnos(3, 3, 3,
+            (double *)x->rotation, 3,
+            (double *)&me, 3,
+            (double *)&r->zeroth_moment_of_mass, 3);
+
+    // H' = E^T H E + rxM'
+    struct matrix3x3 he;
+    struct matrix3x3 ethe;
+    struct matrix3x3 rx;
+
+    la_dgemm_nnos(3, 3, 3,
+            (double *)&m->first_moment_of_mass, 3,
+            (double *)x->rotation, 3,
+            (double *)&he, 3);
+    la_dgemm_tnos(3, 3, 3,
+            (double *)x->rotation, 3,
+            (double *)&he, 3,
+            (double *)&ethe, 3);
+    la_dcrossop(
+            (double *)x->translation, 1,
+            (double *)&rx, 3);
+    la_dgemm_nnoe(3, 3, 3,
+            1.0, (double *)&rx, 3, (double *)&r->zeroth_moment_of_mass, 3,
+            1.0, (double *)&ethe, 3,
+            (double *)&r->first_moment_of_mass, 3);
+
+    // I' = E^T I E + rx(E^T H E)^T - H'rx
+    struct matrix3x3 ie;
+    struct matrix3x3 etie;
+    struct matrix3x3 etie_rxethet;
+
+    // E^T I E
+    la_dgemm_nnos(3, 3, 3,
+            (double *)&m->second_moment_of_mass, 3,
+            (double *)x->rotation, 3,
+            (double *)&ie, 3);
+    la_dgemm_tnos(3, 3, 3,
+            (double *)x->rotation, 3,
+            (double *)&ie, 3,
+            (double *)&etie, 3);
+
+    // + rx(E^T H E)^T
+    la_dgemm_ntoe(3, 3, 3,
+            1.0, (double *)&rx, 3, (double *)&ethe, 3,
+            1.0, (double *)&etie, 3,
+            (double *)&etie_rxethet, 3);
+
+    // - H'rx
+    la_dgemm_nnoe(3, 3, 3,
+            -1.0, (double *)&r->first_moment_of_mass, 3, (double *)&rx, 3,
+            1.0, (double *)&etie_rxethet, 3,
+            (double *)&r->second_moment_of_mass, 3);
+}
+
+
+void ma_abi_tf_tgt_to_ref(
+        const struct ga_pose *x,
+        const struct ma_abi *m,
+        struct ma_abi *r)
+{
+    assert(x);
+    assert(m);
+    assert(r);
+    assert(m != r);
+    assert(m->point == m->frame->origin);
+    assert(m->frame == x->target_frame);
+
+    r->body = m->body;
+    r->frame = x->reference_frame;
+    r->point = r->frame->origin;
+}
+
+
+void mc_abi_add(
+        const struct mc_abi *m1,
+        const struct mc_abi *m2,
+        struct mc_abi *r)
+{
+    assert(m1);
+    assert(m2);
+    assert(r);
+
+    la_dgeadd_os(3, 3,
+            (double *)&m1->zeroth_moment_of_mass, 3,
+            (double *)&m2->zeroth_moment_of_mass, 3,
+            (double *)&r->zeroth_moment_of_mass, 3);
+    la_dgeadd_os(3, 3,
+            (double *)&m1->first_moment_of_mass, 3,
+            (double *)&m2->first_moment_of_mass, 3,
+            (double *)&r->first_moment_of_mass, 3);
+    la_dgeadd_os(3, 3,
+            (double *)&m1->second_moment_of_mass, 3,
+            (double *)&m2->second_moment_of_mass, 3,
+            (double *)&r->second_moment_of_mass, 3);
+}
+
+
+void ma_abi_add(
+        const struct ma_abi *m1,
+        const struct ma_abi *m2,
+        struct ma_abi *r)
+{
+    assert(m1);
+    assert(m2);
+    assert(r);
+    assert(m1->body == m2->body);
+    assert(m1->point == m2->point);
+    assert(m1->frame == m2->frame);
+
+    r->body = m1->body;
+    r->point = m1->point;
+    r->frame = m1->frame;
+}
+
+
+void mc_abi_log(
+        const struct mc_abi *m)
+{
+    assert(m);
+
+    printf("ArticulatedBodyInertiaCoord(\n");
+    printf("  I=                     H=                     M=\n");
+    for (int i = 0; i < 3; i++) {
+        printf("  [%5.2f, %5.2f, %5.2f]",
+                m->second_moment_of_mass.row[i].x,
+                m->second_moment_of_mass.row[i].y,
+                m->second_moment_of_mass.row[i].z);
+        printf("  [%5.2f, %5.2f, %5.2f]",
+                m->first_moment_of_mass.row[i].x,
+                m->first_moment_of_mass.row[i].y,
+                m->first_moment_of_mass.row[i].z);
+        printf("  [%5.2f, %5.2f, %5.2f]",
+                m->zeroth_moment_of_mass.row[i].x,
+                m->zeroth_moment_of_mass.row[i].y,
+                m->zeroth_moment_of_mass.row[i].z);
+        if (i != 2) printf(",\n");
+    }
+    printf(")\n");
+}
+
+
+void ma_abi_log(
+        const struct ma_abi *m)
+{
+    assert(m);
+    assert(m->body);
+    assert(m->point);
+    assert(m->frame);
+
+    printf("ArticulatedBodyInertiaADT(point=%s|%s, frame={%s})\n",
         m->point->name,
         m->body->name,
         m->frame->name);

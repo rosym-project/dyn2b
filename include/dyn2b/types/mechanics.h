@@ -56,6 +56,27 @@ struct ma_rbi
     struct frame *frame;
 };
 
+
+/**
+ * Articulated-body inertia (coordinates)
+ */
+struct mc_abi
+{
+    struct matrix3x3 zeroth_moment_of_mass; // "mass"
+    struct matrix3x3 first_moment_of_mass;  // "mass * centre of mass"
+    struct matrix3x3 second_moment_of_mass; // "rotational inertia"
+};
+
+/**
+ * Articulated-body inertia (ADT)
+ */
+struct ma_abi
+{
+    struct body *body;
+    struct point *point;
+    struct frame *frame;
+};
+
 #ifdef __cplusplus
 }
 #endif
