@@ -53,6 +53,27 @@ void kca_inertial_acceleration(
         const struct ga_twist *xd,
         struct ga_acc_twist *xdd);
 
+/**
+ * Project inertia over a joint (ADT).
+ *
+ * M^a = P^T M^A
+ */
+void kca_project_inertia(
+        const struct kca_joint *joint,
+        const struct ma_abi *m,
+        struct ma_abi *r);
+
+/**
+ * Project wrench over a joint (ADT).
+ *
+ * F^a = P^T F^A
+ */
+void kca_project_wrench(
+        const struct kca_joint *joint,
+        const struct ma_abi *m,
+        const struct ma_wrench *f,
+        struct ma_wrench *r);
+
 
 struct kcc_joint_operators
 {
@@ -97,6 +118,28 @@ struct kcc_joint_operators
             const struct gc_twist *xd,
             const joint_velocity *qd,
             struct gc_acc_twist *xdd);
+
+    /**
+     * Project inertia over a joint (coordinates).
+     *
+     * M^a = P^T M^A = (1 - M^A S D^{-1} S^T) M^A
+     */
+    void (*project_inertia)(
+            const struct kcc_joint *joint,
+            const struct mc_abi *m,
+            struct mc_abi *r);
+
+    /**
+     * Project an array of <count> wrenches over a joint (coordinates).
+     *
+     * F^a[i] = P^T F^A[i] = (1 - M^A S D^{-1} S^T) F^A[i]
+     */
+    void (*project_wrench)(
+            const struct kcc_joint *joint,
+            const struct mc_abi *m,
+            const struct mc_wrench *f,
+            struct mc_wrench *r,
+            int count);
 };
 
 

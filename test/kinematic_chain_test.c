@@ -31,6 +31,45 @@ static struct gc_twist xdc = {
     .linear_velocity = (struct vector3 [1]) { { 2.0, 3.0, 4.0 } }
 };
 
+static struct ma_abi ma = {
+    .body = &body_b,
+    .point = &point_b,
+    .frame = &frame_b
+};
+
+static struct mc_abi mc = {
+    .zeroth_moment_of_mass = {
+        .row_x = { 4.0, 5.0, 6.0 },
+        .row_y = { 5.0, 5.0, 6.0 },
+        .row_z = { 6.0, 6.0, 6.0 }
+    },
+    .first_moment_of_mass = {
+        .row_x = { 2.0, 3.0, 4.0 },
+        .row_y = { 3.0, 3.0, 4.0 },
+        .row_z = { 4.0, 4.0, 4.0 }
+    },
+    .second_moment_of_mass = {
+        .row_x = { 1.0, 2.0, 3.0 },
+        .row_y = { 2.0, 2.0, 3.0 },
+        .row_z = { 3.0, 3.0, 3.0 }
+    }
+};
+
+static struct ma_wrench fa = {
+    .body = &body_b,
+    .point = &point_b,
+    .frame = &frame_b
+};
+
+static struct mc_wrench fc = {
+    .torque = (struct vector3 [2]) {
+        { 1.0, 2.0, 3.0 },
+        { 2.0, 4.0, 6.0 } },
+    .force = (struct vector3 [2]) {
+        { 2.0,  3.0,  4.0 },
+        { 8.0, 10.0, 12.0 } }
+};
+
 
 START_TEST(test_kca_fpk)
 {
@@ -80,6 +119,30 @@ START_TEST(test_kca_inertial_acceleration)
     ck_assert_ptr_eq(xdd.reference_body, &body_a);
     ck_assert_ptr_eq(xdd.frame, &frame_b);
     ck_assert_ptr_eq(xdd.point, &point_b);
+}
+END_TEST
+
+
+START_TEST(test_kca_project_inertia)
+{
+    struct ma_abi m;
+
+    kca_project_inertia(&ja, &ma, &m);
+    ck_assert_ptr_eq(m.body, &body_a);
+    ck_assert_ptr_eq(m.point, &point_b);
+    ck_assert_ptr_eq(m.frame, &frame_b);
+}
+END_TEST
+
+
+START_TEST(test_kca_project_wrench)
+{
+    struct ma_wrench f;
+
+    kca_project_wrench(&ja, &ma, &fa, &f);
+    ck_assert_ptr_eq(f.body, &body_a);
+    ck_assert_ptr_eq(f.point, &point_b);
+    ck_assert_ptr_eq(f.frame, &frame_b);
 }
 END_TEST
 
@@ -283,6 +346,139 @@ START_TEST(test_rev_inertial_acceleration)
 END_TEST
 
 
+START_TEST(test_rev_project_inertia)
+{
+    struct kcc_joint joint = {
+        .type = JOINT_TYPE_REVOLUTE,
+        .revolute_joint.inertia = (double [1]) { 3.0 }
+    };
+    struct mc_abi m;
+
+    struct matrix3x3 res_m2_x = {
+        .row_x = { 0.75, 1.5, 2.25 },
+        .row_y = { 1.5 , 1.0, 1.5  },
+        .row_z = { 2.25, 1.5, 0.75 } };
+    struct matrix3x3 res_m1_x = {
+        .row_x = { 1.5, 2.25, 3.0 },
+        .row_y = { 2.0, 1.5 , 2.0 },
+        .row_z = { 2.5, 1.75, 1.0 } };
+    struct matrix3x3 res_m0_x = {
+        .row_x = { 3.0, 3.5 , 4.0 },
+        .row_y = { 3.5, 2.75, 3.0 },
+        .row_z = { 4.0, 3.0 , 2.0 } };
+
+    joint.revolute_joint.axis = JOINT_AXIS_X;
+    kcc_joint[JOINT_TYPE_REVOLUTE].project_inertia(&joint, &mc, &m);
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            ck_assert_flt_eq(m.second_moment_of_mass.row[i].data[j], res_m2_x.row[i].data[j]);
+            ck_assert_flt_eq(m.first_moment_of_mass.row[i].data[j], res_m1_x.row[i].data[j]);
+            ck_assert_flt_eq(m.zeroth_moment_of_mass.row[i].data[j], res_m0_x.row[i].data[j]);
+        }
+    }
+
+    struct matrix3x3 res_m2_y = {
+        .row_x = { 0.2, 1.2, 1.8 },
+        .row_y = { 1.2, 1.2, 1.8 },
+        .row_z = { 1.8, 1.8, 1.2 } };
+    struct matrix3x3 res_m1_y = {
+        .row_x = { 0.8, 1.8, 2.4 },
+        .row_y = { 1.8, 1.8, 2.4 },
+        .row_z = { 2.2, 2.2, 1.6 } };
+    struct matrix3x3 res_m0_y = {
+        .row_x = { 2.2, 3.2, 3.6 },
+        .row_y = { 3.2, 3.2, 3.6 },
+        .row_z = { 3.6, 3.6, 2.8 } };
+
+    joint.revolute_joint.axis = JOINT_AXIS_Y;
+    kcc_joint[JOINT_TYPE_REVOLUTE].project_inertia(&joint, &mc, &m);
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            ck_assert_flt_eq(m.second_moment_of_mass.row[i].data[j], res_m2_y.row[i].data[j]);
+            ck_assert_flt_eq(m.first_moment_of_mass.row[i].data[j], res_m1_y.row[i].data[j]);
+            ck_assert_flt_eq(m.zeroth_moment_of_mass.row[i].data[j], res_m0_y.row[i].data[j]);
+        }
+    }
+
+
+    struct matrix3x3 res_m2_z = {
+        .row_x = { -0.5, 0.5, 1.5 },
+        .row_y = {  0.5, 0.5, 1.5 },
+        .row_z = {  1.5, 1.5, 1.5 } };
+    struct matrix3x3 res_m1_z = {
+        .row_x = { 0.0, 1.0, 2.0 },
+        .row_y = { 1.0, 1.0, 2.0 },
+        .row_z = { 2.0, 2.0, 2.0 } };
+    struct matrix3x3 res_m0_z = {
+        .row_x = {  4.0 / 3.0,  7.0 / 3.0, 10.0 / 3.0 },
+        .row_y = {  7.0 / 3.0,  7.0 / 3.0, 10.0 / 3.0 },
+        .row_z = { 10.0 / 3.0, 10.0 / 3.0, 10.0 / 3.0 } };
+
+    joint.revolute_joint.axis = JOINT_AXIS_Z;
+    kcc_joint[JOINT_TYPE_REVOLUTE].project_inertia(&joint, &mc, &m);
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            ck_assert_flt_eq(m.second_moment_of_mass.row[i].data[j], res_m2_z.row[i].data[j]);
+            ck_assert_flt_eq(m.first_moment_of_mass.row[i].data[j], res_m1_z.row[i].data[j]);
+            ck_assert_flt_eq(m.zeroth_moment_of_mass.row[i].data[j], res_m0_z.row[i].data[j]);
+        }
+    }
+}
+END_TEST
+
+
+START_TEST(test_rev_project_wrench)
+{
+    struct kcc_joint joint = {
+        .type = JOINT_TYPE_REVOLUTE,
+        .revolute_joint.inertia = (double [1]) { 3.0 }
+    };
+    struct mc_wrench r = {
+        .torque = (struct vector3 [2]) {},
+        .force = (struct vector3 [2]) {}
+    };
+
+
+    struct vector3 res_ang_x[2] = { {  0.75, 1.5 , 2.25 }, {  1.5, 3.0,  4.5 } };
+    struct vector3 res_lin_x[2] = { {  1.5 , 2.25, 3.0  }, {  7.0, 8.5, 10.0 } };
+
+    joint.revolute_joint.axis = JOINT_AXIS_X;
+    kcc_joint[JOINT_TYPE_REVOLUTE].project_wrench(&joint, &mc, &fc, &r, 2);
+    for (int j = 0; j < 2; j++) {
+        for (int i = 0; i < 3; i++) {
+            ck_assert_flt_eq(r.torque[j].data[i], res_ang_x[j].data[i]);
+            ck_assert_flt_eq(r.force[j].data[i], res_lin_x[j].data[i]);
+        }
+    }
+
+    struct vector3 res_ang_y[2] = { {  0.2 , 1.2 , 1.8  }, {  0.4, 2.4,  3.6 } };
+    struct vector3 res_lin_y[2] = { {  0.8 , 1.8 , 2.4  }, {  5.6, 7.6,  8.8 } };
+
+    joint.revolute_joint.axis = JOINT_AXIS_Y;
+    kcc_joint[JOINT_TYPE_REVOLUTE].project_wrench(&joint, &mc, &fc, &r, 2);
+    for (int j = 0; j < 2; j++) {
+        for (int i = 0; i < 3; i++) {
+            ck_assert_flt_eq(r.torque[j].data[i], res_ang_y[j].data[i]);
+            ck_assert_flt_eq(r.force[j].data[i], res_lin_y[j].data[i]);
+        }
+    }
+
+
+    struct vector3 res_ang_z[2] = { { -0.5 , 0.5 , 1.5  }, { -1.0, 1.0,  3.0 } };
+    struct vector3 res_lin_z[2] = { {  0.0 , 1.0 , 2.0  }, {  4.0, 6.0,  8.0 } };
+
+    joint.revolute_joint.axis = JOINT_AXIS_Z;
+    kcc_joint[JOINT_TYPE_REVOLUTE].project_wrench(&joint, &mc, &fc, &r, 2);
+    for (int j = 0; j < 2; j++) {
+        for (int i = 0; i < 3; i++) {
+            ck_assert_flt_eq(r.torque[j].data[i], res_ang_z[j].data[i]);
+            ck_assert_flt_eq(r.force[j].data[i], res_lin_z[j].data[i]);
+        }
+    }
+}
+END_TEST
+
+
 TCase *kinematic_chain_test()
 {
     TCase *tc = tcase_create("KinematicChain");
@@ -291,10 +487,14 @@ TCase *kinematic_chain_test()
     tcase_add_test(tc, test_kca_fvk);
     tcase_add_test(tc, test_kca_fak);
     tcase_add_test(tc, test_kca_inertial_acceleration);
+    tcase_add_test(tc, test_kca_project_inertia);
+    tcase_add_test(tc, test_kca_project_wrench);
     tcase_add_test(tc, test_rev_fpk);
     tcase_add_test(tc, test_rev_fvk);
     tcase_add_test(tc, test_rev_fak);
     tcase_add_test(tc, test_rev_inertial_acceleration);
+    tcase_add_test(tc, test_rev_project_inertia);
+    tcase_add_test(tc, test_rev_project_wrench);
 
     return tc;
 }

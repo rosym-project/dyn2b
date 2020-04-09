@@ -69,6 +69,53 @@ void kca_inertial_acceleration(
 }
 
 
+void kca_project_inertia(
+        const struct kca_joint *joint,
+        const struct ma_abi *m,
+        struct ma_abi *r)
+{
+    assert(joint);
+    assert(m);
+    assert(r);
+    assert(m != r);
+    assert(m->frame);
+    assert(m->point == m->frame->origin);
+    assert(joint->target_body == m->body);
+    assert(joint->target_frame == m->frame);
+
+    r->body = joint->reference_body;
+    r->point = m->point;
+    r->frame = m->frame;
+}
+
+
+void kca_project_wrench(
+        const struct kca_joint *joint,
+        const struct ma_abi *m,
+        const struct ma_wrench *f,
+        struct ma_wrench *r)
+{
+    assert(joint);
+    assert(m);
+    assert(f);
+    assert(r);
+    assert(f != r);
+    assert(m->frame);
+    assert(f->frame);
+    assert(m->point == m->frame->origin);
+    assert(f->point == f->frame->origin);       // wrench
+    assert(joint->target_body == m->body);
+    assert(joint->target_frame == m->frame);
+    assert(joint->target_body == f->body);
+    assert(joint->target_frame == f->frame);
+
+    // Reference: [Featherstone2008]: p. 127, Eq. (7.25)
+    r->body = joint->reference_body;
+    r->point = m->point;
+    r->frame = m->frame;
+}
+
+
 static void rev_fpk(
         const struct kcc_joint *joint,
         const joint_position *q,
@@ -220,11 +267,100 @@ static void rev_inertial_acceleration(
 }
 
 
+static void rev_project_inertia(
+        const struct kcc_joint *joint,
+        const struct mc_abi *m,
+        struct mc_abi *r)
+{
+    assert(joint);
+    assert(m);
+    assert(r);
+    assert(m != r);
+
+    int k = joint->revolute_joint.axis;
+
+    double d = m->second_moment_of_mass.row[k].data[k]
+            + joint->revolute_joint.inertia[0];
+    assert(d != 0.0);
+
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            // The (__ik/d) element represents an entry in the projection matrix P
+            // The __ij and __kj elements represent the entries of the inertia matrix M
+            //     __ij is associated with the diagonal one-element of the projection matrix (the "identity" matrix part)
+            //     -__kj is associated with the non-zero column of the projection matrix
+
+            // 0th moment of mass matrix
+            double m0ij = m->zeroth_moment_of_mass.row[i].data[j];
+            double m0ik = m->first_moment_of_mass.row[k].data[i];    // consider transpose, thus [k, i]
+            double m0kj = m->first_moment_of_mass.row[k].data[j];
+
+            double pm0 = m0ij - (m0ik * m0kj) / d;
+
+            r->zeroth_moment_of_mass.row[i].data[j] = pm0;
+
+
+            // 1st moment of mass matrix
+            double m1ij = m->first_moment_of_mass.row[i].data[j];
+            double m1ik = m->second_moment_of_mass.row[i].data[k];
+            double m1kj = m->first_moment_of_mass.row[k].data[j];
+            double pm1 = m1ij - (m1ik * m1kj) / d;
+
+            r->first_moment_of_mass.row[i].data[j] = pm1;
+
+
+            // 2nd moment of mass matrix
+            double mij = m->second_moment_of_mass.row[i].data[j];
+            double mik = m->second_moment_of_mass.row[i].data[k];
+            double mkj = m->second_moment_of_mass.row[k].data[j];
+            double pm = mij - (mik * mkj) / d;
+
+            r->second_moment_of_mass.row[i].data[j] = pm;
+        }
+    }
+}
+
+
+static void rev_project_wrench(
+        const struct kcc_joint *joint,
+        const struct mc_abi *m,
+        const struct mc_wrench *f,
+        struct mc_wrench *r,
+        int count)
+{
+    assert(joint);
+    assert(m);
+    assert(f);
+    assert(r);
+    assert(f != r);
+
+    int k = joint->revolute_joint.axis;
+
+    double d = m->second_moment_of_mass.row[k].data[k]
+            + joint->revolute_joint.inertia[0];
+    assert(d != 0.0);
+
+    for (int j = 0; j < count; j++) {
+        double qdd = f->torque[j].data[k] / d;
+
+        for (int i = 0; i < 3; i++) {
+            double m2 = m->second_moment_of_mass.row[i].data[k];
+            r->torque[j].data[i] = f->torque[j].data[i] - (m2 * qdd);
+
+            double m1 = m->first_moment_of_mass.row[k].data[i];               // consider transpose, thus [k, i]
+            r->force[j].data[i] = f->force[j].data[i]- (m1 * qdd);
+        }
+    }
+}
+
+
 const struct kcc_joint_operators kcc_joint[] = {
     [JOINT_TYPE_REVOLUTE] = {
         .fpk = rev_fpk,
         .fvk = rev_fvk,
         .fak = rev_fak,
-        .inertial_acceleration = rev_inertial_acceleration
+        .inertial_acceleration = rev_inertial_acceleration,
+        .project_inertia = rev_project_inertia,
+        .project_wrench = rev_project_wrench
     }
 };
