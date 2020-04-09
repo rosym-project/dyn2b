@@ -17,6 +17,26 @@ extern "C" {
 
 
 /**
+ * Wrench (coordinates)
+ */
+struct mc_wrench
+{
+    struct vector3 *torque;
+    struct vector3 *force;
+};
+
+/**
+ * Wrench (ADT)
+ */
+struct ma_wrench
+{
+    struct body *body;
+    struct point *point;
+    struct frame *frame;
+};
+
+
+/**
  * Rigid-body inertia (coordinates)
  */
 struct mc_rbi

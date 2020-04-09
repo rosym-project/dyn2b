@@ -2,6 +2,7 @@
 
 extern TCase *linear_algebra_test();
 extern TCase *geometry_test();
+extern TCase *mechanics_test();
 extern TCase *kinematic_chain_test();
 
 
@@ -10,6 +11,7 @@ int main(int argc, char **argv)
     Suite *s = suite_create("Core");
     suite_add_tcase(s, linear_algebra_test());
     suite_add_tcase(s, geometry_test());
+    suite_add_tcase(s, mechanics_test());
     suite_add_tcase(s, kinematic_chain_test());
 
     SRunner *sr = srunner_create(s);
