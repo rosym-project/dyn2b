@@ -5,6 +5,61 @@
 #include <assert.h>
 
 
+void mc_momentum_derive(
+        const struct gc_twist *xd,
+        const struct mc_momentum *p,
+        struct mc_wrench *r)
+{
+    // w x n
+    struct vector3 wxn;
+    la_dcross_o(
+            (double *)xd->angular_velocity, 1,
+            (double *)p->angular_momentum, 1,
+            (double *)&wxn, 1);
+
+    // v x f
+    struct vector3 vxf;
+    la_dcross_o(
+            (double *)xd->linear_velocity, 1,
+            (double *)p->linear_momentum, 1,
+            (double *)&vxf, 1);
+
+    // n' = w x n + v x f
+    la_daxpy_oe(3,
+            1.0, (double *)&wxn, 1,
+            (double *)&vxf, 1,
+            (double *)r->torque, 1);
+
+    // f' = w x f
+    la_dcross_o(
+            (double *)xd->angular_velocity, 1,
+            (double *)p->linear_momentum, 1,
+            (double *)r->force, 1);
+}
+
+
+void ma_momentum_derive(
+        const struct ga_twist *xd,
+        const struct ma_momentum *p,
+        struct ma_wrench *r)
+{
+    assert(xd);
+    assert(p);
+    assert(r);
+    assert(xd->frame);
+    assert(p->frame);
+    assert(xd->frame->origin == xd->point);     // screw twist
+    assert(p->frame->origin == p->point);       // wrench
+    assert(xd->target_body == p->body);
+    assert(xd->point == p->point);
+    assert(xd->frame == p->frame);
+
+    r->body = xd->target_body;
+    r->point = xd->point;
+    r->frame = xd->frame;
+}
+
+
 void mc_wrench_tf_tgt_to_ref(
         const struct gc_pose *x,
         const struct mc_wrench *f,
@@ -179,6 +234,68 @@ void ma_wrench_log(
         f->point->name,
         f->body->name,
         f->frame->name);
+}
+
+
+void mc_rbi_map_twist_to_momentum(
+        const struct mc_rbi *m,
+        const struct gc_twist *xd,
+        struct mc_momentum *r)
+{
+    assert(m);
+    assert(xd);
+    assert(r);
+
+    // h x v
+    struct vector3 hxv;
+    la_dcross_o(
+            (double *)&m->first_moment_of_mass, 1,
+            (double *)xd->linear_velocity, 1,
+            (double *)&hxv, 1);
+
+    // n = I w + h x v
+    la_dgemv_noe(3, 3,
+            1.0, (double *)&m->second_moment_of_mass, 3, (double *)xd->angular_velocity, 1,
+            1.0, (double *)&hxv, 1,
+            (double *)r->angular_momentum, 1);
+
+    // h x w
+    struct vector3 hxw;
+    la_dcross_o(
+            (double *)&m->first_moment_of_mass, 1,
+            (double *)xd->angular_velocity, 1,
+            (double *)&hxw, 1);
+
+    // m v
+    la_dscal_o(3,
+            m->zeroth_moment_of_mass,
+            (double *)xd->linear_velocity, 1,
+            (double *)r->linear_momentum, 1);
+
+    // f = m v - h x w
+    la_daxpy_ie(3,
+            -1.0, (double *)&hxw, 1,
+            (double *)r->linear_momentum, 1);
+}
+
+
+void ma_rbi_map_twist_to_momentum(
+        const struct ma_rbi *m,
+        const struct ga_twist *xd,
+        struct ma_momentum *r)
+{
+    assert(m);
+    assert(xd);
+    assert(r);
+    assert(xd->frame);
+    assert(xd->frame->origin == xd->point);       // screw twist
+    assert(m->body == xd->target_body);
+    assert(m->point == xd->point);
+    assert(m->frame == xd->frame);
+
+    r->body = xd->target_body;
+    r->point = xd->point;
+    r->frame = xd->frame;
 }
 
 

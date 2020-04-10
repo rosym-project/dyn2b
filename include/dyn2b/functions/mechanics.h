@@ -10,6 +10,27 @@ extern "C" {
 
 
 /**
+ * Spatial cross product's dual (coordinates).
+ *
+ * Xd x* p
+ */
+void mc_momentum_derive(
+        const struct gc_twist *xd,
+        const struct mc_momentum *p,
+        struct mc_wrench *r);
+
+/**
+ * Spatial cross product's dual (ADT).
+ *
+ * Xd x* p
+ */
+void ma_momentum_derive(
+        const struct ga_twist *xd,
+        const struct ma_momentum *p,
+        struct ma_wrench *r);
+
+
+/**
  * Transform an array of <count> wrenches from the pose's target frame to the
  * pose's reference frame (coordinates).
  *
@@ -87,6 +108,26 @@ void mc_wrench_log(
 void ma_wrench_log(
         const struct ma_wrench *f);
 
+
+/**
+ * Map a twist into a momentum (coordinates).
+ *
+ * M Xd
+ */
+void mc_rbi_map_twist_to_momentum(
+        const struct mc_rbi *m,
+        const struct gc_twist *xd,
+        struct mc_momentum *r);
+
+/**
+ * Map a twist into a momentum (ADT).
+ *
+ * M Xd
+ */
+void ma_rbi_map_twist_to_momentum(
+        const struct ma_rbi *m,
+        const struct ga_twist *xd,
+        struct ma_momentum *r);
 
 /**
  * Convert rigid-body inertia to articulated-body inertia (coordinates).

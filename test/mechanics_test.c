@@ -27,6 +27,16 @@ static struct gc_pose xc = {
         { 1.0, 2.0, 3.0 } }
 };
 
+struct gc_twist xdc = {
+    .angular_velocity = (struct vector3 [1]) { 1.0, 2.0, 3.0 },
+    .linear_velocity = (struct vector3 [1]) { 3.0, 4.0, 5.0 }
+};
+
+struct ga_twist xda = {
+    .target_body = &body_a, .reference_body = &body_b,
+    .point = &point_a, .frame = &frame_a
+};
+
 static const struct ma_wrench fa = {
     .body = &body_b,
     .point = &point_b,
@@ -60,6 +70,43 @@ static struct mc_abi mc = {
         .row_y = { 4.0, 6.0, 7.0 },
         .row_z = { 5.0, 7.0, 8.0 } }
 };
+
+
+START_TEST(test_mc_momentum_derive)
+{
+    struct mc_momentum p = {
+        .angular_momentum = (struct vector3 [1]) { 24.0, 41.0, 41.0 },
+        .linear_momentum = (struct vector3 [1]) { 4.0, 12.0,  8.0 } };
+    struct mc_wrench r = {
+        .torque = (struct vector3 [2]) {},
+        .force = (struct vector3 [2]) {} };
+
+    struct vector3 res_ang = { -69.0, 27.0, 13.0 };
+    struct vector3 res_lin = { -20.0,  4.0,  4.0 };
+
+    mc_momentum_derive(&xdc, &p, &r);
+    for (int i = 0; i < 3; i++) {
+        ck_assert_flt_eq(r.torque->data[i], res_ang.data[i]);
+        ck_assert_flt_eq(r.force->data[i], res_lin.data[i]);
+    }
+}
+END_TEST
+
+
+START_TEST(test_ma_momentum_derive)
+{
+    struct ma_momentum p = {
+        .body = &body_a,
+        .point = &point_a,
+        .frame = &frame_a };
+    struct ma_wrench r;
+
+    ma_momentum_derive(&xda, &p, &r);
+    ck_assert_ptr_eq(r.body, &body_a);
+    ck_assert_ptr_eq(r.point, &point_a);
+    ck_assert_ptr_eq(r.frame, &frame_a);
+}
+END_TEST
 
 
 START_TEST(test_mc_wrench_tf_tgt_to_ref)
@@ -151,6 +198,48 @@ START_TEST(test_ma_wrench_sub)
     ck_assert_ptr_eq(f.body, &body_b);
     ck_assert_ptr_eq(f.point, frame_b.origin);
     ck_assert_ptr_eq(f.frame, &frame_b);
+}
+END_TEST
+
+
+START_TEST(test_mc_rbi_map_twist_to_momentum)
+{
+    struct mc_rbi m = {
+        .zeroth_moment_of_mass = 2.0,
+        .first_moment_of_mass = { 4.0, 6.0, 8.0 },
+        .second_moment_of_mass = {
+            .row_x = { 3.0, 4.0, 5.0 },
+            .row_y = { 4.0, 6.0, 7.0 },
+            .row_z = { 5.0, 7.0, 8.0 } } };
+    struct mc_momentum r = {
+        .angular_momentum = (struct vector3 [1]) {},
+        .linear_momentum = (struct vector3 [1]) {} };
+
+    struct vector3 res_ang = { 24.0, 41.0, 41.0 };
+    struct vector3 res_lin = {  4.0, 12.0,  8.0 };
+
+    mc_rbi_map_twist_to_momentum(&m, &xdc, &r);
+    for (int i = 0; i < 3; i++) {
+        ck_assert_flt_eq(r.angular_momentum[0].data[i], res_ang.data[i]);
+        ck_assert_flt_eq(r.linear_momentum[0].data[i], res_lin.data[i]);
+    }
+}
+END_TEST
+
+
+START_TEST(test_ma_rbi_map_twist_to_momentum)
+{
+    struct ma_rbi m = {
+        .body = &body_a,
+        .point = &point_a,
+        .frame = &frame_a
+    };
+    struct ma_momentum r;
+
+    ma_rbi_map_twist_to_momentum(&m, &xda, &r);
+    ck_assert_ptr_eq(r.body, &body_a);
+    ck_assert_ptr_eq(r.point, &point_a);
+    ck_assert_ptr_eq(r.frame, &frame_a);
 }
 END_TEST
 
@@ -294,12 +383,16 @@ TCase *mechanics_test()
 {
     TCase *tc = tcase_create("Mechanics");
 
+    tcase_add_test(tc, test_mc_momentum_derive);
+    tcase_add_test(tc, test_ma_momentum_derive);
     tcase_add_test(tc, test_mc_wrench_tf_tgt_to_ref);
     tcase_add_test(tc, test_ma_wrench_tf_tgt_to_ref);
     tcase_add_test(tc, test_mc_wrench_add);
     tcase_add_test(tc, test_ma_wrench_add);
     tcase_add_test(tc, test_mc_wrench_sub);
     tcase_add_test(tc, test_ma_wrench_sub);
+    tcase_add_test(tc, test_mc_rbi_map_twist_to_momentum);
+    tcase_add_test(tc, test_ma_rbi_map_twist_to_momentum);
     tcase_add_test(tc, test_mc_rbi_to_abi);
     tcase_add_test(tc, test_ma_rbi_to_abi);
     tcase_add_test(tc, test_mc_abi_tf_tgt_to_ref);

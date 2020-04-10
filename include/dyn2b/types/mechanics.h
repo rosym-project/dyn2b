@@ -17,6 +17,26 @@ extern "C" {
 
 
 /**
+ * Momentum (coordinates)
+ */
+struct mc_momentum
+{
+    struct vector3 *angular_momentum;
+    struct vector3 *linear_momentum;
+};
+
+/**
+ * Momentum (ADT)
+ */
+struct ma_momentum
+{
+    struct body *body;
+    struct point *point;
+    struct frame *frame;
+};
+
+
+/**
  * Wrench (coordinates)
  */
 struct mc_wrench
