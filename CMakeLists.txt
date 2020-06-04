@@ -5,6 +5,8 @@ option(BUILD_TEST "Build unit tests" Off)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
+include(PackageRegistry)
+
 include_directories(
   include
 )
@@ -18,3 +20,17 @@ if(BUILD_TEST)
   find_package(Check)
   add_subdirectory(test)
 endif()
+
+
+install(
+  DIRECTORY include/
+  DESTINATION include
+  FILES_MATCHING PATTERN "*.h"
+)
+
+register_package(
+  INCLUDE_DIRS
+    include
+  LIBRARIES
+    dyn2b
+)

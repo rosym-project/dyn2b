@@ -18,3 +18,12 @@ target_link_libraries(dyn2b_example dyn2b)
 
 add_executable(fpk_algorithm example/fpk_algorithm.c)
 target_link_libraries(fpk_algorithm dyn2b_example)
+
+
+install(
+  TARGETS dyn2b
+  EXPORT dyn2b-targets
+  RUNTIME DESTINATION bin
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+)
