@@ -10,6 +10,7 @@ extern "C" {
 
 typedef double joint_position;
 typedef double joint_velocity;
+typedef double joint_acceleration;
 
 
 enum joint_type

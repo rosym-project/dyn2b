@@ -34,6 +34,25 @@ void kca_fvk(
         const struct kca_joint *joint,
         struct ga_twist *xd);
 
+/**
+ * Foward acceleration kinematics (ADT).
+ *
+ * Xdd = S qdd
+ */
+void kca_fak(
+        const struct kca_joint *joint,
+        struct ga_acc_twist *xdd);
+
+/**
+ * Velocity-dependent inertial acceleration of the joint's target body (ADT).
+ *
+ * Xdd_{bias} = Sd qd + (Xd x S) qd
+ */
+void kca_inertial_acceleration(
+        const struct kca_joint *joint,
+        const struct ga_twist *xd,
+        struct ga_acc_twist *xdd);
+
 
 struct kcc_joint_operators
 {
@@ -56,6 +75,28 @@ struct kcc_joint_operators
             const struct kcc_joint *joint,
             const joint_velocity *qd,
             struct gc_twist *xd);
+
+    /**
+     * Forward acceleration kinematics (coordinates).
+     *
+     * Xdd = S qdd
+     */
+    void (*fak)(
+            const struct kcc_joint *joint,
+            const joint_acceleration *qdd,
+            struct gc_acc_twist *xdd);
+
+    /**
+     * Velocity-dependent inertial acceleration of the joint's target body
+     * (coordinates).
+     *
+     * Xdd_{bias} = Sd qd + (Xd x S) qd
+     */
+    void (*inertial_acceleration)(
+            const struct kcc_joint *joint,
+            const struct gc_twist *xd,
+            const joint_velocity *qd,
+            struct gc_acc_twist *xdd);
 };
 
 
