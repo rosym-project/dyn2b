@@ -63,6 +63,21 @@ struct ga_twist
     struct frame *frame;
 };
 
+
+struct gc_acc_twist
+{
+    struct vector3 *angular_acceleration;
+    struct vector3 *linear_acceleration;
+};
+
+struct ga_acc_twist
+{
+    struct body *target_body;
+    struct body *reference_body;
+    struct point *point;
+    struct frame *frame;
+};
+
 #ifdef __cplusplus
 }
 #endif
