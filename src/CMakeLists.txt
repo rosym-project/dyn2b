@@ -22,6 +22,9 @@ target_link_libraries(fpk_algorithm dyn2b_example)
 add_executable(fvk_algorithm example/fvk_algorithm.c)
 target_link_libraries(fvk_algorithm dyn2b_example)
 
+add_executable(fak_algorithm example/fak_algorithm.c)
+target_link_libraries(fak_algorithm dyn2b_example)
+
 
 install(
   TARGETS dyn2b

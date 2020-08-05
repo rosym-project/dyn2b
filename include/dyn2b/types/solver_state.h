@@ -22,6 +22,11 @@ struct solver_state_a
     struct ga_twist     *xd_jnt;    // velocity over the joint                  [nbody]
     struct ga_twist     *xd_tf;     // transformed predecessor velocity         [nbody]
     struct ga_twist     *xd;        // velocity                                 [nbody]
+    struct ga_acc_twist *xdd_jnt;   // acceleration over the joint              [nbody]
+    struct ga_acc_twist *xdd_bias;  // bias acceleration                        [nbody]
+    struct ga_acc_twist *xdd_net;   // net acceleration over the joint          [nbody]
+    struct ga_acc_twist *xdd_tf;    // tf'ed acceleration                       [nbody]
+    struct ga_acc_twist *xdd;       // acceleration                             [nbody]
 };
 
 
@@ -38,10 +43,16 @@ struct solver_state_c
     struct gc_twist     *xd_jnt;    // velocity over the joint                  [nbody]
     struct gc_twist     *xd_tf;     // transformed predecessor velocity         [nbody]
     struct gc_twist     *xd;        // velocity                                 [nbody]
+    struct gc_acc_twist *xdd_jnt;   // acceleration over the joint              [nbody]
+    struct gc_acc_twist *xdd_bias;  // bias acceleration                        [nbody]
+    struct gc_acc_twist *xdd_net;   // net acceleration over the joint          [nbody]
+    struct gc_acc_twist *xdd_tf;    // tf'ed acceleration                       [nbody]
+    struct gc_acc_twist *xdd;       // acceleration                             [nbody]
 
     // joint motion state
     joint_position *q;              // joint position                           [nq]
     joint_velocity *qd;             // joint velocity                           [nd]
+    joint_acceleration *qdd;        // joint acceleration                       [nd]
 };
 
 #ifdef __cplusplus
