@@ -82,6 +82,25 @@ void kca_ifk(
 }
 
 
+void kca_ffd(
+        const struct kca_joint *joint,
+        const struct ma_abi *m,
+        struct ma_wrench *f)
+{
+    assert(joint);
+    assert(m);
+    assert(f);
+    assert(m->frame);
+    assert(m->point == m->frame->origin);
+    assert(joint->target_body == m->body);
+    assert(joint->target_frame == m->frame);
+
+    f->body = joint->reference_body;
+    f->frame = joint->target_frame;
+    f->point = joint->target_frame->origin;
+}
+
+
 void kca_project_inertia(
         const struct kca_joint *joint,
         const struct ma_abi *m,
@@ -298,6 +317,32 @@ static void rev_ifk(
 }
 
 
+static void rev_ffd(
+        const struct kcc_joint *joint,
+        const struct mc_abi *m,
+        const joint_torque *tau,
+        struct mc_wrench *f,
+        int count)
+{
+    assert(joint);
+    assert(m);
+    assert(tau);
+    assert(f);
+
+    int k = joint->revolute_joint.axis;
+    double d = m->second_moment_of_mass.row[k].data[k]
+            + joint->revolute_joint.inertia[0];
+
+    for (int i = 0; i < count; i++) {
+        double qdd = tau[i] / d;
+        for (int j = 0; j < 3; j++) {
+            f->torque[i].data[j] = m->second_moment_of_mass.row[j].data[k] * qdd;
+            f->force[i].data[j] = m->first_moment_of_mass.row[k].data[j] * qdd;    // consider transpose, thus [k, j]
+        }
+    }
+}
+
+
 static void rev_project_inertia(
         const struct kcc_joint *joint,
         const struct mc_abi *m,
@@ -392,6 +437,7 @@ const struct kcc_joint_operators kcc_joint[] = {
         .fak = rev_fak,
         .inertial_acceleration = rev_inertial_acceleration,
         .ifk = rev_ifk,
+        .ffd = rev_ffd,
         .project_inertia = rev_project_inertia,
         .project_wrench = rev_project_wrench
     }

@@ -63,6 +63,16 @@ void kca_ifk(
         const struct ma_wrench *f);
 
 /**
+ * Forward force dynamics (ADT).
+ *
+ * F = M S D^{-1} tau
+ */
+void kca_ffd(
+        const struct kca_joint *joint,
+        const struct ma_abi *m,
+        struct ma_wrench *f);
+
+/**
  * Project inertia over a joint (ADT).
  *
  * M^a = P^T M^A
@@ -137,6 +147,18 @@ struct kcc_joint_operators
             const struct kcc_joint *joint,
             const struct mc_wrench *f,
             joint_torque *tau,
+            int count);
+
+    /**
+     * Forward force dynamics on <count> torques (coordinates).
+     *
+     * F[i] = M S D^{-1} tau[i]
+     */
+    void (*ffd)(
+            const struct kcc_joint *joint,
+            const struct mc_abi *m,
+            const joint_torque *tau,
+            struct mc_wrench *f,
             int count);
 
     /**
