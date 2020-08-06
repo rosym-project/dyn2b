@@ -140,6 +140,37 @@ START_TEST(test_ma_wrench_tf_tgt_to_ref)
 END_TEST
 
 
+START_TEST(test_mc_wrench_invert)
+{
+    struct mc_wrench f = {
+        .torque = (struct vector3 [2]) {},
+        .force = (struct vector3 [2]) {} };
+    struct vector3 res_ang[2] = { { -1.0, -2.0, -3.0 }, { -2.0, - 4.0, - 6.0 } };
+    struct vector3 res_lin[2] = { { -2.0, -3.0, -4.0 }, { -8.0, -10.0, -12.0 } };
+
+    mc_wrench_invert(&fc, &f, 2);
+    for (int j = 0; j < 2; j++) {
+        for (int i = 0; i < 3; i++) {
+            ck_assert_flt_eq(f.torque[j].data[i], res_ang[j].data[i]);
+            ck_assert_flt_eq(f.force[j].data[i], res_lin[j].data[i]);
+        }
+    }
+}
+END_TEST
+
+
+START_TEST(test_ma_wrench_invert)
+{
+    struct ma_wrench f;
+
+    ma_wrench_invert(&fa, &f);
+    ck_assert_ptr_eq(f.body, &body_b);
+    ck_assert_ptr_eq(f.point, frame_b.origin);
+    ck_assert_ptr_eq(f.frame, &frame_b);
+}
+END_TEST
+
+
 START_TEST(test_mc_wrench_add)
 {
     struct mc_wrench f = {
@@ -387,6 +418,8 @@ TCase *mechanics_test()
     tcase_add_test(tc, test_ma_momentum_derive);
     tcase_add_test(tc, test_mc_wrench_tf_tgt_to_ref);
     tcase_add_test(tc, test_ma_wrench_tf_tgt_to_ref);
+    tcase_add_test(tc, test_mc_wrench_invert);
+    tcase_add_test(tc, test_ma_wrench_invert);
     tcase_add_test(tc, test_mc_wrench_add);
     tcase_add_test(tc, test_ma_wrench_add);
     tcase_add_test(tc, test_mc_wrench_sub);

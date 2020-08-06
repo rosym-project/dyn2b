@@ -116,6 +116,34 @@ void ma_wrench_tf_tgt_to_ref(
 }
 
 
+void mc_wrench_invert(
+        const struct mc_wrench *f,
+        struct mc_wrench *r,
+        int count)
+{
+    assert(f);
+    assert(r);
+
+    la_dscal_o(3 * count, -1.0, (double *)f->torque, 1, (double *)r->torque, 1);
+    la_dscal_o(3 * count, -1.0, (double *)f->force, 1, (double *)r->force, 1);
+}
+
+
+void ma_wrench_invert(
+        const struct ma_wrench *f,
+        struct ma_wrench *r)
+{
+    assert(f);
+    assert(r);
+    assert(f->frame);
+    assert(f->frame->origin == f->point);
+
+    r->body = f->body;
+    r->point = f->point;
+    r->frame = f->frame;
+}
+
+
 void mc_wrench_add(
         const struct mc_wrench *f1,
         const struct mc_wrench *f2,

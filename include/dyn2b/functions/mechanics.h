@@ -54,6 +54,25 @@ void ma_wrench_tf_tgt_to_ref(
         struct ma_wrench *r);
 
 /**
+ * Invert an array of <count> wrenches (coordinates).
+ *
+ * -F
+ */
+void mc_wrench_invert(
+        const struct mc_wrench *f,
+        struct mc_wrench *r,
+        int count);
+
+/**
+ * Invert a wrench (ADT).
+ *
+ * -F
+ */
+void ma_wrench_invert(
+        const struct ma_wrench *f,
+        struct ma_wrench *r);
+
+/**
  * Add two arrays of <count> wrenches component-wise (coordinates).
  *
  * F_1[i] + F_2[i]
