@@ -410,6 +410,57 @@ START_TEST(test_ma_abi_add)
 END_TEST
 
 
+START_TEST(test_mc_abi_map_acc_twist_to_wrench)
+{
+    struct mc_abi m = {
+        .zeroth_moment_of_mass = {
+            .row_x = { 1.0, 2.0, 3.0 },
+            .row_y = { 2.0, 3.0, 4.0 },
+            .row_z = { 3.0, 4.0, 5.0 } },
+        .first_moment_of_mass = {
+            .row_x = { 4.0, 5.0, 6.0 },
+            .row_y = { 5.0, 6.0, 7.0 },
+            .row_z = { 6.0, 7.0, 8.0 } },
+        .second_moment_of_mass = {
+            .row_x = { 3.0, 4.0, 5.0 },
+            .row_y = { 4.0, 6.0, 7.0 },
+            .row_z = { 5.0, 7.0, 8.0 } } };
+    struct gc_acc_twist xdd = {
+        .angular_acceleration = (struct vector3 [1]) { 1.0, 2.0, 3.0 },
+        .linear_acceleration = (struct vector3 [1]) { 3.0, 4.0, 5.0 } };
+    struct mc_wrench f = {
+        .torque = (struct vector3 [1]) {},
+        .force = (struct vector3 [1]) {} };
+
+    struct vector3 res_ang = { 88.0, 111.0, 129.0 };
+    struct vector3 res_lin = { 58.0,  76.0,  94.0 };
+
+    mc_abi_map_acc_twist_to_wrench(&m, &xdd, &f);
+    for (int i = 0; i < 3; i++) {
+        ck_assert_flt_eq(f.torque[0].data[i], res_ang.data[i]);
+        ck_assert_flt_eq(f.force[0].data[i], res_lin.data[i]);
+    }
+}
+END_TEST
+
+
+START_TEST(test_ma_abi_map_acc_twist_to_wrench)
+{
+    struct ga_acc_twist xdd = {
+        .target_body = &body_b,
+        .reference_body = &body_a,
+        .point = &point_b,
+        .frame = &frame_b };
+    struct ma_wrench f;
+
+    ma_abi_map_acc_twist_to_wrench(&ma, &xdd, &f);
+    ck_assert_ptr_eq(f.body, &body_b);
+    ck_assert_ptr_eq(f.point, &point_b);
+    ck_assert_ptr_eq(f.frame, &frame_b);
+}
+END_TEST
+
+
 TCase *mechanics_test()
 {
     TCase *tc = tcase_create("Mechanics");
@@ -432,6 +483,8 @@ TCase *mechanics_test()
     tcase_add_test(tc, test_ma_abi_tf_tgt_to_ref);
     tcase_add_test(tc, test_mc_abi_add);
     tcase_add_test(tc, test_ma_abi_add);
+    tcase_add_test(tc, test_mc_abi_map_acc_twist_to_wrench);
+    tcase_add_test(tc, test_ma_abi_map_acc_twist_to_wrench);
 
     return tc;
 }

@@ -221,6 +221,26 @@ void ma_abi_add(
         struct ma_abi *r);
 
 /**
+ * Map an acceleration twist into a wrench (coordinates).
+ *
+ * M^A Xdd
+ */
+void mc_abi_map_acc_twist_to_wrench(
+        const struct mc_abi *m,
+        const struct gc_acc_twist *xdd,
+        struct mc_wrench *f);
+
+/**
+ * Map an acceleration twist into a wrench (ADT).
+ *
+ * M^A Xdd
+ */
+void ma_abi_map_acc_twist_to_wrench(
+        const struct ma_abi *m,
+        const struct ga_acc_twist *xdd,
+        struct ma_wrench *f);
+
+/**
  * Print articulated-body inertia (coordinates).
  */
 void mc_abi_log(

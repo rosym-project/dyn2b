@@ -528,6 +528,63 @@ void ma_abi_add(
 }
 
 
+void mc_abi_map_acc_twist_to_wrench(
+        const struct mc_abi *m,
+        const struct gc_acc_twist *xdd,
+        struct mc_wrench *f)
+{
+    assert(m);
+    assert(xdd);
+    assert(f);
+
+    // H v
+    struct vector3 hv;
+    la_dgemv_nos(3, 3,
+            (double *)&m->first_moment_of_mass, 3,
+            (double *)xdd->linear_acceleration, 1,
+            (double *)&hv, 1);
+
+    // n = I w + H v
+    la_dgemv_noe(3, 3,
+            1.0, (double *)&m->second_moment_of_mass, 3, (double *)xdd->angular_acceleration, 1,
+            1.0, (double *)&hv, 1,
+            (double *)f->torque, 1);
+
+    // H^T w
+    struct vector3 htw;
+    la_dgemv_tos(3, 3,
+            (double *)&m->first_moment_of_mass, 3,
+            (double *)xdd->angular_acceleration, 1,
+            (double *)&htw, 1);
+
+    // f = M v + H^T w
+    la_dgemv_noe(3, 3,
+            1.0, (double *)&m->zeroth_moment_of_mass, 3, (double *)xdd->linear_acceleration, 1,
+            1.0, (double *)&htw, 1,
+            (double *)f->force, 1);
+}
+
+
+void ma_abi_map_acc_twist_to_wrench(
+        const struct ma_abi *m,
+        const struct ga_acc_twist *xdd,
+        struct ma_wrench *f)
+{
+    assert(m);
+    assert(xdd);
+    assert(f);
+    assert(xdd->frame);
+    assert(xdd->point == xdd->frame->origin);       // screw twist
+    assert(xdd->point == m->point);
+    assert(xdd->target_body == m->body);
+    assert(xdd->frame == m->frame);
+
+    f->body = xdd->target_body;
+    f->point = xdd->point;
+    f->frame = xdd->frame;
+}
+
+
 void mc_abi_log(
         const struct mc_abi *m)
 {
