@@ -34,7 +34,32 @@ void setup_simple_state_c(
     s->xdd_net   = calloc(NR_SEGMENTS, sizeof(struct gc_acc_twist));
     s->xdd_bias  = calloc(NR_SEGMENTS, sizeof(struct gc_acc_twist));
     s->xdd_tf    = calloc(NR_SEGMENTS_WITH_BASE, sizeof(struct gc_acc_twist));
+    s->xdd_nact  = calloc(NR_SEGMENTS, sizeof(struct gc_acc_twist));
     s->xdd       = calloc(NR_SEGMENTS_WITH_BASE, sizeof(struct gc_acc_twist));
+    // Inertia
+    s->m_art = calloc(NR_SEGMENTS_WITH_BASE, sizeof(struct mc_abi));
+    s->m_app = calloc(NR_SEGMENTS, sizeof(struct mc_abi));
+    s->m_tf  = calloc(NR_SEGMENTS_WITH_BASE, sizeof(struct mc_abi));
+    // Inertial force
+    s->p            = calloc(NR_SEGMENTS, sizeof(struct mc_momentum));
+    s->f_bias_art   = calloc(NR_SEGMENTS_WITH_BASE, sizeof(struct mc_wrench));
+    s->f_bias_eom   = calloc(NR_SEGMENTS, sizeof(struct mc_wrench));
+    s->f_bias_app   = calloc(NR_SEGMENTS, sizeof(struct mc_wrench));
+    s->f_bias_tf    = calloc(NR_SEGMENTS, sizeof(struct mc_wrench));
+    s->f_bias_nact  = calloc(NR_SEGMENTS, sizeof(struct mc_wrench));
+    s->tau_bias_art = calloc(s->nd, sizeof(joint_torque));
+    // Feed-forward torque
+    s->f_ff_art   = calloc(NR_SEGMENTS_WITH_BASE, sizeof(struct mc_wrench));
+    s->f_ff_app   = calloc(NR_SEGMENTS, sizeof(struct mc_wrench));
+    s->f_ff_jnt   = calloc(NR_SEGMENTS, sizeof(struct mc_wrench));
+    s->tau_ff_art = calloc(s->nd, sizeof(joint_torque));
+    // External force
+    s->tau_ff      = calloc(s->nd, sizeof(joint_torque));
+    s->f_ext       = calloc(NR_SEGMENTS, sizeof(struct mc_wrench));
+    s->f_ext_art   = calloc(NR_SEGMENTS_WITH_BASE, sizeof(struct mc_wrench));
+    s->f_ext_app   = calloc(NR_SEGMENTS, sizeof(struct mc_wrench));
+    s->f_ext_tf    = calloc(NR_SEGMENTS, sizeof(struct mc_wrench));
+    s->tau_ext_art = calloc(s->nd, sizeof(joint_torque));
 
     // FPK
     s->q     = calloc(s->nq, sizeof(double));
@@ -42,6 +67,8 @@ void setup_simple_state_c(
     s->qd    = calloc(s->nd, sizeof(double));
     // FAK
     s->qdd   = calloc(s->nd, sizeof(double));
+    // Dynamics
+    s->tau_ctrl = calloc(s->nd, sizeof(joint_torque));
 
     for (int i = 0; i < NR_SEGMENTS; i++) {
         // FPK
@@ -61,6 +88,31 @@ void setup_simple_state_c(
         s->xdd_bias[i].linear_acceleration  = calloc(1, sizeof(struct vector3));
         s->xdd_net[i].angular_acceleration  = calloc(1, sizeof(struct vector3));
         s->xdd_net[i].linear_acceleration   = calloc(1, sizeof(struct vector3));
+        s->xdd_nact[i].angular_acceleration = calloc(1, sizeof(struct vector3));
+        s->xdd_nact[i].linear_acceleration  = calloc(1, sizeof(struct vector3));
+        // Inertial force
+        s->p[i].angular_momentum = calloc(1, sizeof(struct vector3));
+        s->p[i].linear_momentum  = calloc(1, sizeof(struct vector3));
+        s->f_bias_eom[i].torque  = calloc(1, sizeof(struct vector3));
+        s->f_bias_eom[i].force   = calloc(1, sizeof(struct vector3));
+        s->f_bias_app[i].torque  = calloc(1, sizeof(struct vector3));
+        s->f_bias_app[i].force   = calloc(1, sizeof(struct vector3));
+        s->f_bias_tf[i].torque   = calloc(1, sizeof(struct vector3));
+        s->f_bias_tf[i].force    = calloc(1, sizeof(struct vector3));
+        s->f_bias_nact[i].torque = calloc(1, sizeof(struct vector3));
+        s->f_bias_nact[i].force  = calloc(1, sizeof(struct vector3));
+        // Feed-forward torque
+        s->f_ff_app[i].torque = calloc(1, sizeof(struct vector3));
+        s->f_ff_app[i].force  = calloc(1, sizeof(struct vector3));
+        s->f_ff_jnt[i].torque = calloc(1, sizeof(struct vector3));
+        s->f_ff_jnt[i].force  = calloc(1, sizeof(struct vector3));
+        // External force
+        s->f_ext[i].torque     = calloc(1, sizeof(struct vector3));
+        s->f_ext[i].force      = calloc(1, sizeof(struct vector3));
+        s->f_ext_app[i].torque = calloc(1, sizeof(struct vector3));
+        s->f_ext_app[i].force  = calloc(1, sizeof(struct vector3));
+        s->f_ext_tf[i].torque  = calloc(1, sizeof(struct vector3));
+        s->f_ext_tf[i].force   = calloc(1, sizeof(struct vector3));
     }
 
     for (int i = 0; i < NR_SEGMENTS_WITH_BASE; i++) {
@@ -75,6 +127,15 @@ void setup_simple_state_c(
         s->xdd[i].linear_acceleration     = calloc(1, sizeof(struct vector3));
         s->xdd_tf[i].angular_acceleration = calloc(1, sizeof(struct vector3));
         s->xdd_tf[i].linear_acceleration  = calloc(1, sizeof(struct vector3));
+        // Inertial force
+        s->f_bias_art[i].torque = calloc(1, sizeof(struct vector3));
+        s->f_bias_art[i].force  = calloc(1, sizeof(struct vector3));
+        // Feed-forward torque
+        s->f_ff_art[i].torque = calloc(1, sizeof(struct vector3));
+        s->f_ff_art[i].force  = calloc(1, sizeof(struct vector3));
+        // External force
+        s->f_ext_art[i].torque = calloc(1, sizeof(struct vector3));
+        s->f_ext_art[i].force  = calloc(1, sizeof(struct vector3));
     }
 
     // FPK
@@ -111,7 +172,28 @@ void setup_simple_state_a(
     s->xdd_net  = calloc(NR_SEGMENTS, sizeof(struct ga_acc_twist));
     s->xdd_bias = calloc(NR_SEGMENTS, sizeof(struct ga_acc_twist));
     s->xdd_tf   = calloc(NR_SEGMENTS_WITH_BASE, sizeof(struct ga_acc_twist));
+    s->xdd_nact = calloc(NR_SEGMENTS, sizeof(struct ga_acc_twist));
     s->xdd      = calloc(NR_SEGMENTS_WITH_BASE, sizeof(struct ga_acc_twist));
+    // Inertia
+    s->m_art = calloc(NR_SEGMENTS_WITH_BASE, sizeof(struct ma_abi));
+    s->m_app = calloc(NR_SEGMENTS, sizeof(struct ma_abi));
+    s->m_tf  = calloc(NR_SEGMENTS_WITH_BASE, sizeof(struct ma_abi));
+    // Inertial force
+    s->p           = calloc(NR_SEGMENTS, sizeof(struct ma_momentum));
+    s->f_bias_art  = calloc(NR_SEGMENTS_WITH_BASE, sizeof(struct ma_wrench));
+    s->f_bias_eom  = calloc(NR_SEGMENTS, sizeof(struct ma_wrench));
+    s->f_bias_app  = calloc(NR_SEGMENTS, sizeof(struct ma_wrench));
+    s->f_bias_tf   = calloc(NR_SEGMENTS, sizeof(struct ma_wrench));
+    s->f_bias_nact = calloc(NR_SEGMENTS, sizeof(struct ma_wrench));
+    // Feed-forward torque
+    s->f_ff_art = calloc(NR_SEGMENTS_WITH_BASE, sizeof(struct ma_wrench));
+    s->f_ff_app = calloc(NR_SEGMENTS, sizeof(struct ma_wrench));
+    s->f_ff_jnt = calloc(NR_SEGMENTS, sizeof(struct ma_wrench));
+    // External force
+    s->f_ext     = calloc(NR_SEGMENTS, sizeof(struct ma_wrench));
+    s->f_ext_art = calloc(NR_SEGMENTS_WITH_BASE, sizeof(struct ma_wrench));
+    s->f_ext_app = calloc(NR_SEGMENTS, sizeof(struct ma_wrench));
+    s->f_ext_tf  = calloc(NR_SEGMENTS, sizeof(struct ma_wrench));
 
     struct body *body_world = kc->segment[0].joint_attachment.reference_body;
     struct frame *frame_world = kc->segment[0].joint_attachment.reference_frame;
@@ -135,4 +217,26 @@ void setup_simple_state_a(
     s->xdd[0].reference_body = body_world;
     s->xdd[0].point = point_world_origin;
     s->xdd[0].frame = frame_world;
+    // Inertia
+    s->m_art[0].body = body_world;
+    s->m_art[0].point = point_world_origin;
+    s->m_art[0].frame = frame_world;
+    // Inertial force
+    s->f_bias_art[0].body = body_world;
+    s->f_bias_art[0].point = point_world_origin;
+    s->f_bias_art[0].frame = frame_world;
+    // Feed-forward torque
+    s->f_ff_art[EE].body = body_ee;
+    s->f_ff_art[EE].point = point_ee_origin;
+    s->f_ff_art[EE].frame = frame_ee;
+    // External force
+    s->f_ext_art[0].body = body_world;
+    s->f_ext_art[0].point = point_world_origin;
+    s->f_ext_art[0].frame = frame_world;
+
+    for (int i = 0; i < NR_SEGMENTS; i++) {
+        s->f_ext[i].body = kc->segment[i].joint.target_body;
+        s->f_ext[i].frame = kc->segment[i].link.root_frame;
+        s->f_ext[i].point = kc->segment[i].link.root_frame->origin;
+    }
 }

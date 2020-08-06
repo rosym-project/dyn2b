@@ -26,7 +26,32 @@ struct solver_state_a
     struct ga_acc_twist *xdd_bias;  // bias acceleration                        [nbody]
     struct ga_acc_twist *xdd_net;   // net acceleration over the joint          [nbody]
     struct ga_acc_twist *xdd_tf;    // tf'ed acceleration                       [nbody]
+    struct ga_acc_twist *xdd_nact;  // acceleration w/o active joint contrib.   [nbody]
     struct ga_acc_twist *xdd;       // acceleration                             [nbody]
+
+    // inertia
+    struct ma_abi *m_art;           // articulated-body inertia                 [nbody]
+    struct ma_abi *m_app;           // apparent inertia                         [nbody]
+    struct ma_abi *m_tf;            // tf'ed apparent inertia                   [nbody]
+
+    // inertial force
+    struct ma_momentum *p;          // momentum                                 [nbody]
+    struct ma_wrench *f_bias_art;   // articulated bias force                   [nbody]
+    struct ma_wrench *f_bias_eom;   // articulated equation of motion           [nbody]
+    struct ma_wrench *f_bias_app;   // apparent bias force                      [nbody]
+    struct ma_wrench *f_bias_tf;    // tf'ed apparent bias force                [nbody]
+    struct ma_wrench *f_bias_nact;  // inertial force w/o active joint contrib. [nbody]
+
+    // feed-forward joint torque motion driver
+    struct ma_wrench *f_ff_art;     // articulated feed-forward force           [nbody]
+    struct ma_wrench *f_ff_app;     // apparent feed-forward force              [nbody]
+    struct ma_wrench *f_ff_jnt;     // joint contribution to feed-forward force [nbody]
+
+    // external force motion driver
+    struct ma_wrench *f_ext;        // external force                           [nbody]
+    struct ma_wrench *f_ext_art;    // articulated external force               [nbody]
+    struct ma_wrench *f_ext_app;    // apparent external force                  [nbody]
+    struct ma_wrench *f_ext_tf;     // tf'ed apparent external force            [nbody]
 };
 
 
@@ -47,12 +72,44 @@ struct solver_state_c
     struct gc_acc_twist *xdd_bias;  // bias acceleration                        [nbody]
     struct gc_acc_twist *xdd_net;   // net acceleration over the joint          [nbody]
     struct gc_acc_twist *xdd_tf;    // tf'ed acceleration                       [nbody]
+    struct gc_acc_twist *xdd_nact;  // acceleration w/o active joint contrib.   [nbody]
     struct gc_acc_twist *xdd;       // acceleration                             [nbody]
 
     // joint motion state
     joint_position *q;              // joint position                           [nq]
     joint_velocity *qd;             // joint velocity                           [nd]
     joint_acceleration *qdd;        // joint acceleration                       [nd]
+
+    // inertia
+    struct mc_abi *m_art;           // articulated-body inertia                 [nbody]
+    struct mc_abi *m_app;           // apparent inertia                         [nbody]
+    struct mc_abi *m_tf;            // tf'ed apparent inertia                   [nbody]
+    joint_inertia *d;               // constrained inertia                      [nd]
+
+    // inertial force
+    struct mc_momentum *p;          // momentum                                 [nbody]
+    struct mc_wrench *f_bias_art;   // articulated bias force                   [nbody]
+    struct mc_wrench *f_bias_eom;   // articulated equation of motion           [nbody]
+    struct mc_wrench *f_bias_app;   // apparent bias force                      [nbody]
+    struct mc_wrench *f_bias_tf;    // tf'ed apparent bias force                [nbody]
+    struct mc_wrench *f_bias_nact;  // inertial force w/o active joint contrib. [nbody]
+    joint_torque *tau_bias_art;     // torque due to art. bias force            [nd]
+
+    // feed-forward joint torque motion driver
+    joint_torque *tau_ff;           // feed-forward torque                      [nd]
+    struct mc_wrench *f_ff_art;     // articulated feed-forward force           [nbody]
+    struct mc_wrench *f_ff_app;     // apparent feed-forward force              [nbody]
+    struct mc_wrench *f_ff_jnt;     // joint contribution to feed-forward force [nbody]
+    joint_torque *tau_ff_art;       // torque due to art. feed-forward force    [nd]
+
+    // external force motion driver
+    struct mc_wrench *f_ext;        // external force                           [nbody]
+    struct mc_wrench *f_ext_art;    // articulated external force               [nbody]
+    struct mc_wrench *f_ext_app;    // apparent external force                  [nbody]
+    struct mc_wrench *f_ext_tf;     // tf'ed apparent external force            [nbody]
+    joint_torque *tau_ext_art;      // torque due to art. external force        [nd]
+
+    joint_torque *tau_ctrl;         // joint control torque                     [nd]
 };
 
 #ifdef __cplusplus
