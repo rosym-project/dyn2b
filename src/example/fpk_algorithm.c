@@ -22,10 +22,10 @@ void fpk_a()
         kca_fpk(joint, &s.x_jnt[i - 1]);
 
         // i^X_{i-1} = X_{J,i} X_{T,i}
-        ga_pose_compose(&kc->segment[i - 1].joint_attachment, &s.x_jnt[i - 1], &s.x_rel[i - 1]);
+        ga_pose_compose(&s.x_jnt[i - 1], &kc->segment[i - 1].joint_attachment, &s.x_rel[i - 1]);
 
         // i^X_0 = i^X_{i-1} {i-1}^X_0
-        ga_pose_compose(&s.x_tot[i - 1], &s.x_rel[i - 1], &s.x_tot[i]);
+        ga_pose_compose(&s.x_rel[i - 1], &s.x_tot[i - 1], &s.x_tot[i]);
     }
 
     ga_pose_log(&s.x_tot[s.nbody]);
@@ -54,10 +54,10 @@ void fpk_c()
         kcc_joint[joint_type].fpk(joint, &s.q[i - 1], &s.x_jnt[i - 1]);
 
         // i^X_{i-1} = X_{J,i} X_{T,i}
-        gc_pose_compose(&kc->segment[i - 1].joint_attachment, &s.x_jnt[i - 1], &s.x_rel[i - 1]);
+        gc_pose_compose(&s.x_jnt[i - 1], &kc->segment[i - 1].joint_attachment, &s.x_rel[i - 1]);
 
         // i^X_0 = i^X_{i-1} {i-1}^X_0
-        gc_pose_compose(&s.x_tot[i - 1], &s.x_rel[i - 1], &s.x_tot[i]);
+        gc_pose_compose(&s.x_rel[i - 1], &s.x_tot[i - 1], &s.x_tot[i]);
     }
 
     gc_pose_log(&s.x_tot[s.nbody]);

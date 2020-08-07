@@ -43,12 +43,12 @@ void ga_pose_compose(
     assert(r);
     assert(x1 != r);
     assert(x2 != r);
-    assert(x1->target_frame == x2->reference_frame);
+    assert(x1->reference_frame == x2->target_frame);
 
-    r->target_body = x2->target_body;
-    r->target_frame = x2->target_frame;
-    r->reference_body = x1->reference_body;
-    r->reference_frame = x1->reference_frame;
+    r->target_body = x1->target_body;
+    r->target_frame = x1->target_frame;
+    r->reference_body = x2->reference_body;
+    r->reference_frame = x2->reference_frame;
 }
 
 
