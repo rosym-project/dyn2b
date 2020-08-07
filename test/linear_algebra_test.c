@@ -614,6 +614,27 @@ START_TEST(test_la_dgemm_nnoe)
             ck_assert_flt_eq(arr_d[i][j], arr_r[i][j]);
         }
     }
+
+
+    double arr_a2[2][1] = { { 1.0 },
+                            { 4.0 } };
+    double arr_b2[3][1] = { { 7.0 } };
+    double arr_c2[2][1] = { { 2.0 },
+                            { 3.0 } };
+    double arr_d2[2][1];
+
+    double arr_r2[2][1] = { { 20.0 },
+                            { 65.0 } };
+
+    la_dgemm_nnoe(2, 1, 1,
+            2.0, &arr_a2[0][0], 1, &arr_b2[0][0], 1,
+            3.0, &arr_c2[0][0], 1,
+            &arr_d2[0][0], 1);
+    for (int i = 0; i < 2; i++) {
+        for (int j = 0; j < 1; j++) {
+            ck_assert_flt_eq(arr_d2[i][j], arr_r2[i][j]);
+        }
+    }
 }
 END_TEST
 

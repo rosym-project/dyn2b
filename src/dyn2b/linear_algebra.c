@@ -400,7 +400,7 @@ void la_dgemm_nnoe(
     assert(m >= 0);
     assert(n >= 0);
     assert(k >= 0);
-    assert(lda >= 1 && lda >= m);
+    assert(lda >= 1 && lda >= k);
     assert(ldb >= 1 && ldb >= n);
     assert(ldc >= 1 && ldc >= n);
     assert(ldd >= 1 && ldd >= n);
