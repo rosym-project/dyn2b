@@ -1,5 +1,6 @@
 #include <dyn2b/functions/linear_algebra.h>
 
+#include <math.h>
 #include <assert.h>
 
 
@@ -481,6 +482,145 @@ void la_dgemm_ntoe(
                 dij += alpha * a[i_ * lda + k_] * b[j_ * ldb + k_];
             }
             d[i_ * ldc + j_] = dij;
+        }
+    }
+}
+
+
+void la_dsytrfr_lo(
+        int n,
+        double alpha,
+        const double *x, int incx,
+        const double *a, int lda,
+        double *b, int ldb)
+{
+    assert(x);
+    assert(a);
+    assert(b);
+    assert(x != a);
+    assert(x != b);
+    assert(a != b);
+    assert(n >= 0);
+    assert(lda >= 1 && lda >= n);
+    assert(ldb >= 1 && ldb >= n);
+    assert(incx > 0);
+    assert(alpha > 0.0);
+
+    // Implementation based on:
+    // Enrique Sentana, "Econometric applications of positive rank-one
+    // modifications of the symmetric factorization of a positive semi-definite
+    // matrix", Spanish Economic Review 1, 79–90, 1999.
+
+    const double EPSILON = 10e-5;
+    double beta[n];
+    double w[n];
+
+    for (int i = 0; i < n; i++) w[i] = x[i * incx];
+
+    for (int j = 0; j < n; j++) {
+        double p = w[j];
+        double d = a[j * lda + j];
+
+        if (fabs(p) >= EPSILON) {
+            if (fabs(d) >= EPSILON) {
+                double d_bar = d + alpha * p * p;
+                b[j * ldb + j] = d_bar;
+                beta[j] = p * alpha / d_bar;
+                alpha = d * alpha / d_bar;
+
+                for (int r = j + 1; r < n; r++) {
+                    assert(a[r * lda + j] == a[j * lda + r]);
+
+                    w[r] = w[r] - p * a[r * lda + j];
+
+                    double l_bar = a[r * lda + j] + beta[j] * w[r];
+                    b[r * ldb + j] = b[j * ldb + r] = l_bar;
+                }
+            } else {
+                double d_bar = alpha * p * p;
+                b[j * ldb + j] = d_bar;
+                beta[j] = 1.0 / p;
+
+                for (int r = j + 1; r < n; r++) {
+                    assert(a[r * lda + j] == a[j * lda + r]);
+
+                    double l_bar = beta[j] * w[r];
+                    b[r * ldb + j] = b[j * ldb + r] = l_bar;
+                }
+
+                for (int i = j + 1; i < n; i++) {
+                    double d_bar = d;
+                    b[i * ldb + i] = d_bar;
+                    for (int r = i; r < n; r++) {
+                        assert(a[r * lda + i] == a[i * lda + r]);
+
+                        double l_bar = a[r * lda + i];
+                        b[r * ldb + i] = b[i * ldb + r] = l_bar;
+                    }
+                }
+
+                break;
+            }
+        } else {
+            double d_bar = d;
+            b[j * ldb + j] = d_bar;
+
+            for (int r = j + 1; r < n; r++) {
+                assert(a[r * lda + j] == a[j * lda + r]);
+
+                double l_bar = a[r * lda + j];
+                b[r * ldb + j] = b[j * ldb + r] = l_bar;
+            }
+        }
+    }
+}
+
+
+void la_trsv_lnd(
+        int n,
+        const double *a, int lda,
+        const double *b, int incb,
+        double *x, int incx)
+{
+    assert(a);
+    assert(b);
+    assert(x);
+    assert(a != x);
+    assert(b != x);
+    assert(n >= 0);
+    assert(incb > 0);
+    assert(incx > 0);
+    assert(lda >= 1 && lda >= n);
+
+    for (int i = 0; i < n; i++) {
+        x[i * incx] = b[i * incb];
+        for (int j = 0; j < i; j++) {
+            x[i * incx] -= a[i * lda + j] * x[j * incx];
+        }
+    }
+}
+
+
+void la_trsv_ltd(
+        int n,
+        const double *a, int lda,
+        const double *b, int incb,
+        double *x, int incx)
+{
+    assert(a);
+    assert(b);
+    assert(x);
+    assert(a != x);
+    assert(b != x);
+    assert(n >= 0);
+    assert(incb > 0);
+    assert(incx > 0);
+    assert(lda >= 1 && lda >= n);
+
+    for (int i = n - 1; i >= 0; i--) {
+        x[i * incx] = b[i * incb];
+        for (int j = i + 1; j < n; j++) {
+            x[i * incx] -= a[i * lda + j] * x[j * incx];
         }
     }
 }

@@ -715,6 +715,128 @@ START_TEST(test_la_dgemm_ntoe)
 END_TEST
 
 
+START_TEST(test_la_dsytrfr_lo)
+{
+    double alpha = 0.5;
+    double l_updated[3][3];
+
+
+    double l1[3][3] = {
+        { 1.0, 2.0, 3.0 },
+        { 2.0, 2.0, 4.0 },
+        { 3.0, 4.0, 3.0 } };
+    double w1[3] = { 2.0, 3.0, 4.0 };
+
+    double result_l1[3][3] = {
+        { 3.0       , 1.66666667, 2.33333333 },
+        { 1.66666667, 2.16666667, 3.84615385 },
+        { 2.33333333, 3.84615385, 3.61538462 } };
+
+    la_dsytrfr_lo(3, alpha, w1, 1, l1[0], 3, l_updated[0], 3);
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            ck_assert_flt_eq(l_updated[i][j], result_l1[i][j]);
+        }
+    }
+
+    double l2[3][3] = {
+        { 1.0, 2.0, 3.0 },
+        { 2.0, 0.0, 4.0 },
+        { 3.0, 4.0, 3.0 } };
+    double w2[3] = { 2.0, 3.0, 4.0 };
+
+    double result_l2[3][3] = {
+        { 3.0       , 1.66666667, 2.33333333 },
+        { 1.66666667, 0.16666667, 2.0        },
+        { 2.33333333, 2.0       , 3.0        } };
+
+    la_dsytrfr_lo(3, alpha, w2, 1, l2[0], 3, l_updated[0], 3);
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            ck_assert_flt_eq(l_updated[i][j], result_l2[i][j]);
+        }
+    }
+
+
+    double l3[3][3] = {
+        { 0.0, 2.0, 3.0 },
+        { 2.0, 2.0, 4.0 },
+        { 3.0, 4.0, 3.0 } };
+    double w3[3] = { 0.0, 3.0, 4.0 };
+
+    double result_l3[3][3] = {
+        { 0.0, 2.0       , 3.0         },
+        { 2.0, 6.5       , 2.15384615  },
+        { 3.0, 2.15384615, 12.84615385 } };
+
+    la_dsytrfr_lo(3, alpha, w3, 1, l3[0], 3, l_updated[0], 3);
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            ck_assert_flt_eq(l_updated[i][j], result_l3[i][j]);
+        }
+    }
+
+
+    double l4[2][2] = {
+        { 2.0, 5.0 },
+        { 5.0, 3.0 } };
+    double w4[3] = { 1.0, 2.0 };
+
+    double result_l4[2][2] = {
+        { 2.25      , 14.0 / 3.0 },
+        { 14.0 / 3.0, 5.0        } };
+
+    double l_updated2[2][2];
+    la_dsytrfr_lo(2, 0.25, w4, 1, l4[0], 2, l_updated2[0], 2);
+    for (int i = 0; i < 2; i++) {
+        for (int j = 0; j < 2; j++) {
+            ck_assert_flt_eq(l_updated2[i][j], result_l4[i][j]);
+        }
+    }
+}
+END_TEST
+
+
+START_TEST(test_la_trsv_lnd)
+{
+    double l[3][3] = {
+        { 1.0, 0.0, 0.0 },
+        { 3.0, 1.0, 0.0 },
+        { 4.0, 6.0, 1.0 } };
+    double b[3] = { 1.0, 2.0, 3.0 };
+    double x[3];
+
+    la_trsv_lnd(3,
+            l[0], 3,
+            b, 1,
+            x, 1);
+    ck_assert_flt_eq(x[0],  1.0);
+    ck_assert_flt_eq(x[1], -1.0);
+    ck_assert_flt_eq(x[2],  5.0);
+}
+END_TEST
+
+
+START_TEST(test_la_trsv_ltd)
+{
+    double u[3][3] = {
+        { 1.0, 6.0, 4.0 },
+        { 0.0, 1.0, 3.0 },
+        { 0.0, 0.0, 1.0 } };
+    double b[3] = { 3.0, 2.0, 1.0 };
+    double x[3];
+
+    la_trsv_ltd(3,
+            u[0], 3,
+            b, 1,
+            x, 1);
+    ck_assert_flt_eq(x[2],  1.0);
+    ck_assert_flt_eq(x[1], -1.0);
+    ck_assert_flt_eq(x[0],  5.0);
+}
+END_TEST
+
+
 TCase *linear_algebra_test()
 {
     TCase *tc = tcase_create("LinearAlgebra");
@@ -739,6 +861,9 @@ TCase *linear_algebra_test()
     tcase_add_test(tc, test_la_dgemm_nnoe);
     tcase_add_test(tc, test_la_dgemm_tnoe);
     tcase_add_test(tc, test_la_dgemm_ntoe);
+    tcase_add_test(tc, test_la_dsytrfr_lo);
+    tcase_add_test(tc, test_la_trsv_lnd);
+    tcase_add_test(tc, test_la_trsv_ltd);
 
     return tc;
 }
