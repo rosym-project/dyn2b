@@ -17,6 +17,12 @@ extern "C" {
 
 
 /**
+ * Acceleration energy (coordinates)
+ */
+typedef double mc_eacc;
+
+
+/**
  * Momentum (coordinates)
  */
 struct mc_momentum
