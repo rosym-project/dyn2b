@@ -14,6 +14,7 @@ void setup_simple_state_c(
     const int NR_SEGMENTS = kc->number_of_segments;
     const int NR_SEGMENTS_WITH_BASE = NR_SEGMENTS + 1;
     const int EE = NR_SEGMENTS;
+    const int NR_CSTR = 6;
 
     // FPK
     s->nbody = NR_SEGMENTS;
@@ -60,6 +61,10 @@ void setup_simple_state_c(
     s->f_ext_app   = calloc(NR_SEGMENTS, sizeof(struct mc_wrench));
     s->f_ext_tf    = calloc(NR_SEGMENTS, sizeof(struct mc_wrench));
     s->tau_ext_art = calloc(s->nd, sizeof(joint_torque));
+    // Constraint force
+    s->f_cstr_art   = calloc(NR_SEGMENTS_WITH_BASE, sizeof(struct ma_wrench));
+    s->f_cstr_app   = calloc(NR_SEGMENTS, sizeof(struct ma_wrench));
+    s->tau_cstr_art = calloc(s->nd, sizeof(joint_torque *));
 
     // FPK
     s->q     = calloc(s->nq, sizeof(double));
@@ -113,6 +118,9 @@ void setup_simple_state_c(
         s->f_ext_app[i].force  = calloc(1, sizeof(struct vector3));
         s->f_ext_tf[i].torque  = calloc(1, sizeof(struct vector3));
         s->f_ext_tf[i].force   = calloc(1, sizeof(struct vector3));
+        // Constraint force
+        s->f_cstr_app[i].torque = calloc(NR_CSTR, sizeof(struct vector3));
+        s->f_cstr_app[i].force  = calloc(NR_CSTR, sizeof(struct vector3));
     }
 
     for (int i = 0; i < NR_SEGMENTS_WITH_BASE; i++) {
@@ -136,6 +144,14 @@ void setup_simple_state_c(
         // External force
         s->f_ext_art[i].torque = calloc(1, sizeof(struct vector3));
         s->f_ext_art[i].force  = calloc(1, sizeof(struct vector3));
+        // Constraint force
+        s->f_cstr_art[i].torque = calloc(NR_CSTR, sizeof(struct vector3));
+        s->f_cstr_art[i].force  = calloc(NR_CSTR, sizeof(struct vector3));
+    }
+
+    for (int i = 0; i < s->nd; i++) {
+        // Constraint force
+        s->tau_cstr_art[i] = calloc(NR_CSTR, sizeof(joint_torque));
     }
 
     // FPK
@@ -194,6 +210,9 @@ void setup_simple_state_a(
     s->f_ext_art = calloc(NR_SEGMENTS_WITH_BASE, sizeof(struct ma_wrench));
     s->f_ext_app = calloc(NR_SEGMENTS, sizeof(struct ma_wrench));
     s->f_ext_tf  = calloc(NR_SEGMENTS, sizeof(struct ma_wrench));
+    // Constraint force
+    s->f_cstr_art = calloc(NR_SEGMENTS_WITH_BASE, sizeof(struct ma_wrench));
+    s->f_cstr_app = calloc(NR_SEGMENTS, sizeof(struct ma_wrench));
 
     struct body *body_world = kc->segment[0].joint_attachment.reference_body;
     struct frame *frame_world = kc->segment[0].joint_attachment.reference_frame;
@@ -233,6 +252,10 @@ void setup_simple_state_a(
     s->f_ext_art[0].body = body_world;
     s->f_ext_art[0].point = point_world_origin;
     s->f_ext_art[0].frame = frame_world;
+    // Constraint force
+    s->f_cstr_art[EE].body = body_ee;
+    s->f_cstr_art[EE].point = point_ee_origin;
+    s->f_cstr_art[EE].frame = frame_ee;
 
     for (int i = 0; i < NR_SEGMENTS; i++) {
         s->f_ext[i].body = kc->segment[i].joint.target_body;

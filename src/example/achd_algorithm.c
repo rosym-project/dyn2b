@@ -125,12 +125,20 @@ void achd_a()
 
         // F_{ext,i-1}^A += F_{ext,i}^a'
         ma_wrench_add(&s.f_ext_art[i - 1], &s.f_ext_tf[i - 1], &s.f_ext_art[i - 1]);
+
+
+        // F_{cstr,i}^a = P_i^T
+        kca_project_wrench(joint, &s.m_art[i], &s.f_cstr_art[i], &s.f_cstr_app[i - 1]);
+
+        // F_{cstr,i-1}^A = {i-1}^X_i* F_{cstr,i}^a
+        ma_wrench_tf_tgt_to_ref(&s.x_rel[i - 1], &s.f_cstr_app[i - 1], &s.f_cstr_art[i - 1]);
     }
 
     ma_abi_log(&s.m_art[0]);
     ma_wrench_log(&s.f_bias_art[0]);
     ma_wrench_log(&s.f_ff_art[0]);
     ma_wrench_log(&s.f_ext_art[0]);
+    ma_wrench_log(&s.f_cstr_art[0]);
 
 
     for (int i = 1; i < s.nbody + 1; i++) {
@@ -164,6 +172,10 @@ void achd_a()
         kca_ifk(joint, &s.f_ext_art[i]);
 
 
+        // tau_{cstr,i}^A' = S^T F_{cstr,i}
+        kca_ifk(joint, &s.f_cstr_art[i]);
+
+
         // Resultant acceleration
         //
 
@@ -186,6 +198,8 @@ void achd_c()
     struct kcc_kinematic_chain *kc = &two_dof_robot_c;
     struct solver_state_c s;
 
+    const int NR_CSTR = 6;
+
     setup_simple_state_c(kc, &s);
 
     s.q[0] = 1.0;
@@ -198,6 +212,12 @@ void achd_c()
     s.tau_ff[0] = 1.0;
     s.tau_ff[1] = 1.0;
     s.xdd->linear_acceleration[0].z = 9.81;
+    s.f_cstr_art[s.nbody].torque[0].x = 1.0;
+    s.f_cstr_art[s.nbody].torque[1].y = 1.0;
+    s.f_cstr_art[s.nbody].torque[2].z = 1.0;
+    s.f_cstr_art[s.nbody].force[3].x = 1.0;
+    s.f_cstr_art[s.nbody].force[4].y = 1.0;
+    s.f_cstr_art[s.nbody].force[5].z = 1.0;
 
 
     for (int i = 1; i < s.nbody + 1; i++) {
@@ -313,12 +333,20 @@ void achd_c()
 
         // F_{ext,i-1}^A += F_{ext,i}^a'
         mc_wrench_add(&s.f_ext_art[i - 1], &s.f_ext_tf[i - 1], &s.f_ext_art[i - 1], 1);
+
+
+        // F_{cstr,i}^a = P_i^T
+        kcc_joint[joint_type].project_wrench(joint, &s.m_art[i], &s.f_cstr_art[i], &s.f_cstr_app[i - 1], NR_CSTR);
+
+        // F_{cstr,i-1}^A = {i-1}^X_i* F_{cstr,i}^a
+        mc_wrench_tf_tgt_to_ref(&s.x_rel[i - 1], &s.f_cstr_app[i - 1], &s.f_cstr_art[i - 1], NR_CSTR);
     }
 
     mc_abi_log(&s.m_art[0]);
     mc_wrench_log(&s.f_bias_art[0], 1);
     mc_wrench_log(&s.f_ff_art[0], 1);
     mc_wrench_log(&s.f_ext_art[0], 1);
+    mc_wrench_log(&s.f_cstr_art[0], NR_CSTR);
 
 
     for (int i = 1; i < s.nbody + 1; i++) {
@@ -351,6 +379,10 @@ void achd_c()
 
         // tau_{ext,i}^A = S^T F_{ext,i}
         kcc_joint[joint_type].ifk(joint, &s.f_ext_art[i], &s.tau_ext_art[i - 1], 1);
+
+
+        // tau_{cstr,i}^A' = S^T F_{cstr,i}
+        kcc_joint[joint_type].ifk(joint, &s.f_cstr_art[i], s.tau_cstr_art[i - 1], NR_CSTR);
 
 
         // Solve

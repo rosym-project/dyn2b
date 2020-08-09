@@ -52,6 +52,11 @@ struct solver_state_a
     struct ma_wrench *f_ext_art;    // articulated external force               [nbody]
     struct ma_wrench *f_ext_app;    // apparent external force                  [nbody]
     struct ma_wrench *f_ext_tf;     // tf'ed apparent external force            [nbody]
+
+    // acceleration constraint motion driver
+    struct ma_wrench *f_cstr;       // constraint force                         [nc]
+    struct ma_wrench *f_cstr_art;   // articulated constraint force             [nc * nbody]
+    struct ma_wrench *f_cstr_app;   // apparent constraint force                [nc * nbody]
 };
 
 
@@ -108,6 +113,12 @@ struct solver_state_c
     struct mc_wrench *f_ext_app;    // apparent external force                  [nbody]
     struct mc_wrench *f_ext_tf;     // tf'ed apparent external force            [nbody]
     joint_torque *tau_ext_art;      // torque due to art. external force        [nd]
+
+    // acceleration constraint motion driver
+    struct mc_wrench *f_cstr;       // constraint force                         [nc]
+    struct mc_wrench *f_cstr_art;   // articulated constraint force             [nbody * nc]
+    struct mc_wrench *f_cstr_app;   // apparent constraint force                [nbody * nc]
+    joint_torque **tau_cstr_art;    // torque due to art. cstr. force           [nd * nc]
 
     joint_torque *tau_ctrl;         // joint control torque                     [nd]
 };
