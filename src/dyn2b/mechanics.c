@@ -1,8 +1,37 @@
 #include <dyn2b/functions/mechanics.h>
 #include <dyn2b/functions/linear_algebra.h>
 
+#include <math.h>
 #include <stdio.h>
 #include <assert.h>
+
+
+void mc_eacc_balance(
+        const double *decomp,
+        const mc_eacc *e,
+        double *scale,
+        int count)
+{
+    double z[count];
+    la_trsv_lnd(count,
+            decomp, count,
+            e, 1,
+            z, 1);
+
+    for (int i = 0; i < count; i++) {
+        const double EPSILON = 1e-15;
+        double d = decomp[i * count + i];
+
+        // Truncation
+        if (fabs(d) < EPSILON) z[i] = 0.0;
+        else z[i] /= d;
+    }
+
+    la_trsv_ltd(count,
+            decomp, count,
+            z, 1,
+            scale, 1);
+}
 
 
 void mc_momentum_derive(

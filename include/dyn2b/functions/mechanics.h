@@ -10,6 +10,22 @@ extern "C" {
 
 
 /**
+ * Balance acceleration energy (coordinates).
+ *
+ * \param decomp The LDL^T decomposition of a <count> x <count> matrix of
+ * acceleration energy.
+ *
+ * \param e <count> x 1 vector of acceleration energy.
+ *
+ * scale = E_1^{-1} E_2
+ */
+void mc_eacc_balance(
+        const double *decomp,
+        const mc_eacc *e,
+        double *scale,
+        int count);
+
+/**
  * Spatial cross product's dual (coordinates).
  *
  * Xd x* p

@@ -79,6 +79,24 @@ static struct mc_abi mc = {
 };
 
 
+START_TEST(test_mc_eacc_balance)
+{
+    double d[3][3] = {
+        { 1.0, 2.0, 3.0 },
+        { 2.0, 2.0, 4.0 },
+        { 3.0, 4.0, 3.0 } };
+    double e[3] = { 4.0, 4.0, 2.0};
+    double s[3];
+    double res[3] = { 18.0, -10.0, 2.0 };
+
+    mc_eacc_balance(&d[0][0], e, s, 3);
+    for (int i = 0; i < 3; i++) {
+        ck_assert_flt_eq(s[i], res[i]);
+    }
+}
+END_TEST
+
+
 START_TEST(test_mc_momentum_derive)
 {
     struct mc_momentum p = {
@@ -472,6 +490,7 @@ TCase *mechanics_test()
 {
     TCase *tc = tcase_create("Mechanics");
 
+    tcase_add_test(tc, test_mc_eacc_balance);
     tcase_add_test(tc, test_mc_momentum_derive);
     tcase_add_test(tc, test_ma_momentum_derive);
     tcase_add_test(tc, test_mc_wrench_tf_tgt_to_ref);
