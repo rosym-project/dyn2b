@@ -27,6 +27,7 @@ START_TEST(test_la_dscal_o)
     ck_assert_flt_eq(r.y, -4.0);
     ck_assert_flt_eq(r.z, -6.0);
 }
+END_TEST
 
 
 START_TEST(test_la_dscal_i)
@@ -38,6 +39,7 @@ START_TEST(test_la_dscal_i)
     ck_assert_flt_eq(a.y, -4.0);
     ck_assert_flt_eq(a.z, -6.0);
 }
+END_TEST
 
 
 START_TEST(test_la_dgeadd_os)
@@ -91,6 +93,7 @@ START_TEST(test_la_dgeadd_os)
         }
     }
 }
+END_TEST
 
 
 START_TEST(test_la_dgeadd_is)
@@ -115,6 +118,7 @@ START_TEST(test_la_dgeadd_is)
         }
     }
 }
+END_TEST
 
 
 START_TEST(test_la_daxpy_oe)
@@ -131,6 +135,7 @@ START_TEST(test_la_daxpy_oe)
     ck_assert_flt_eq(r.y, -1.0);
     ck_assert_flt_eq(r.z, -2.0);
 }
+END_TEST
 
 
 START_TEST(test_la_daxpy_ie)
@@ -145,6 +150,7 @@ START_TEST(test_la_daxpy_ie)
     ck_assert_flt_eq(b.y, -1.0);
     ck_assert_flt_eq(b.z, -2.0);
 }
+END_TEST
 
 
 START_TEST(test_la_ddot)
@@ -159,6 +165,7 @@ START_TEST(test_la_ddot)
             &r);
     ck_assert_flt_eq(r, 20.0);
 }
+END_TEST
 
 
 START_TEST(test_la_dcross_o)
@@ -177,6 +184,7 @@ START_TEST(test_la_dcross_o)
     ck_assert_flt_eq(r.y,  2.0);
     ck_assert_flt_eq(r.z, -1.0);
 }
+END_TEST
 
 
 START_TEST(test_la_dcrossop)
@@ -196,6 +204,7 @@ START_TEST(test_la_dcrossop)
         }
     }
 }
+END_TEST
 
 
 START_TEST(test_la_dgemv_nos)
@@ -310,6 +319,7 @@ START_TEST(test_la_dgemv_toe)
     ck_assert_flt_eq(arr_r[1], 106.0);
 }
 END_TEST
+
 
 START_TEST(test_la_dgemm_nnos)
 {
