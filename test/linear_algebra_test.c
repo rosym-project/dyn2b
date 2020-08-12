@@ -799,7 +799,7 @@ END_TEST
 
 START_TEST(test_la_trsv_lnd)
 {
-    double l[3][3] = {
+    double l1[3][3] = {
         { 1.0, 0.0, 0.0 },
         { 3.0, 1.0, 0.0 },
         { 4.0, 6.0, 1.0 } };
@@ -807,7 +807,21 @@ START_TEST(test_la_trsv_lnd)
     double x[3];
 
     la_trsv_lnd(3,
-            l[0], 3,
+            l1[0], 3,
+            b, 1,
+            x, 1);
+    ck_assert_flt_eq(x[0],  1.0);
+    ck_assert_flt_eq(x[1], -1.0);
+    ck_assert_flt_eq(x[2],  5.0);
+
+
+    double l2[3][3] = {
+        { 2.0, 0.0, 0.0 },
+        { 3.0, 3.0, 0.0 },
+        { 4.0, 6.0, 4.0 } };
+
+    la_trsv_lnd(3,
+            l2[0], 3,
             b, 1,
             x, 1);
     ck_assert_flt_eq(x[0],  1.0);
@@ -819,7 +833,7 @@ END_TEST
 
 START_TEST(test_la_trsv_ltd)
 {
-    double u[3][3] = {
+    double u1[3][3] = {
         { 1.0, 6.0, 4.0 },
         { 0.0, 1.0, 3.0 },
         { 0.0, 0.0, 1.0 } };
@@ -827,7 +841,21 @@ START_TEST(test_la_trsv_ltd)
     double x[3];
 
     la_trsv_ltd(3,
-            u[0], 3,
+            u1[0], 3,
+            b, 1,
+            x, 1);
+    ck_assert_flt_eq(x[2],  1.0);
+    ck_assert_flt_eq(x[1], -1.0);
+    ck_assert_flt_eq(x[0],  5.0);
+
+
+    double u2[3][3] = {
+        { 2.0, 6.0, 4.0 },
+        { 0.0, 3.0, 3.0 },
+        { 0.0, 0.0, 4.0 } };
+
+    la_trsv_ltd(3,
+            u2[0], 3,
             b, 1,
             x, 1);
     ck_assert_flt_eq(x[2],  1.0);
