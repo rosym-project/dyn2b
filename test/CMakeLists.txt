@@ -8,7 +8,8 @@ add_executable(main_test
 
 target_link_libraries(main_test
   dyn2b
-  ${CHECK_LIBRARY}
+  ${CHECK_LIBRARIES}
+  ${CHECK_LDFLAGS}
 )
 
 add_test(main_test
