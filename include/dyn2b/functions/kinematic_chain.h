@@ -93,6 +93,17 @@ void kca_project_wrench(
         const struct ma_wrench *f,
         struct ma_wrench *r);
 
+/**
+ * Project acceleration twist over a joint (ADT).
+ *
+ * P Xdd
+ */
+void kca_project_acc_twist(
+        const struct kca_joint *joint,
+        const struct ma_abi *m,
+        const struct ga_acc_twist *xdd,
+        struct ga_acc_twist *r);
+
 
 struct kcc_joint_operators
 {
@@ -182,6 +193,17 @@ struct kcc_joint_operators
             const struct mc_wrench *f,
             struct mc_wrench *r,
             int count);
+
+    /**
+     * Project acceleration twist over a joint (coordinates).
+     *
+     * P Xdd
+     */
+    void (*project_acc_twist)(
+            const struct kcc_joint *joint,
+            const struct mc_abi *m,
+            const struct gc_acc_twist *xdd,
+            struct gc_acc_twist *r);
 
     /**
      * Decompose auto constraint energy.

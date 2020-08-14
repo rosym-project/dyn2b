@@ -33,9 +33,19 @@ static struct ga_twist xda = {
     .point = &point_b, .frame = &frame_b
 };
 
+static struct ga_acc_twist xdda = {
+    .target_body = &body_b, .reference_body = &body_c,
+    .point = &point_b, .frame = &frame_b
+};
+
 static struct gc_twist xdc = {
     .angular_velocity = (struct vector3 [1]) { { 1.0, 2.0, 3.0 } },
     .linear_velocity = (struct vector3 [1]) { { 2.0, 3.0, 4.0 } }
+};
+
+static struct gc_acc_twist xddc = {
+    .angular_acceleration = (struct vector3 [1]) { { 4.0, 5.0, 6.0 } },
+    .linear_acceleration = (struct vector3 [1]) { { 5.0, 6.0, 7.0 } }
 };
 
 static struct ma_abi ma = {
@@ -169,6 +179,19 @@ START_TEST(test_kca_project_wrench)
     ck_assert_ptr_eq(f.body, &body_a);
     ck_assert_ptr_eq(f.point, &point_b);
     ck_assert_ptr_eq(f.frame, &frame_b);
+}
+END_TEST
+
+
+START_TEST(test_kca_project_acc_twist)
+{
+    struct ga_acc_twist xdd;
+
+    kca_project_acc_twist(&ja, &ma, &xdda, &xdd);
+    ck_assert_ptr_eq(xdd.target_body, &body_b);
+    ck_assert_ptr_eq(xdd.reference_body, &body_c);
+    ck_assert_ptr_eq(xdd.point, &point_b);
+    ck_assert_ptr_eq(xdd.frame, &frame_b);
 }
 END_TEST
 
@@ -591,6 +614,53 @@ START_TEST(test_rev_project_wrench)
 END_TEST
 
 
+START_TEST(test_rev_project_acc_twist)
+{
+    struct kcc_joint joint = {
+        .type = JOINT_TYPE_REVOLUTE,
+        .revolute_joint.inertia = (double [1]) { 3.0 }
+    };
+    struct gc_acc_twist r = {
+        .angular_acceleration = (struct vector3 [1]) {},
+        .linear_acceleration = (struct vector3 [1]) {}
+    };
+
+
+    struct vector3 res_ang_x[1] = { { -18.0, 5.0, 6.0 } };
+    struct vector3 res_lin_x[1] = { {   5.0, 6.0, 7.0 } };
+
+    joint.revolute_joint.axis = JOINT_AXIS_X;
+    kcc_joint[JOINT_TYPE_REVOLUTE].project_acc_twist(&joint, &mc, &xddc, &r);
+    for (int i = 0; i < 3; i++) {
+        ck_assert_flt_eq(r.angular_acceleration[0].data[i], res_ang_x[0].data[i]);
+        ck_assert_flt_eq(r.linear_acceleration[0].data[i], res_lin_x[0].data[i]);
+    }
+
+
+    struct vector3 res_ang_y[1] = { { 4.0, -14.4, 6.0 } };
+    struct vector3 res_lin_y[1] = { { 5.0,   6.0, 7.0 } };
+
+    joint.revolute_joint.axis = JOINT_AXIS_Y;
+    kcc_joint[JOINT_TYPE_REVOLUTE].project_acc_twist(&joint, &mc, &xddc, &r);
+    for (int i = 0; i < 3; i++) {
+        ck_assert_flt_eq(r.angular_acceleration[0].data[i], res_ang_y[0].data[i]);
+        ck_assert_flt_eq(r.linear_acceleration[0].data[i], res_lin_y[0].data[i]);
+    }
+
+
+    struct vector3 res_ang_z[1] = { { 4.0, 5.0, -13.5 } };
+    struct vector3 res_lin_z[1] = { { 5.0, 6.0,   7.0 } };
+
+    joint.revolute_joint.axis = JOINT_AXIS_Z;
+    kcc_joint[JOINT_TYPE_REVOLUTE].project_acc_twist(&joint, &mc, &xddc, &r);
+    for (int i = 0; i < 3; i++) {
+        ck_assert_flt_eq(r.angular_acceleration[0].data[i], res_ang_z[0].data[i]);
+        ck_assert_flt_eq(r.linear_acceleration[0].data[i], res_lin_z[0].data[i]);
+    }
+}
+END_TEST
+
+
 START_TEST(test_rev_decomp_e_cstr)
 {
     struct kcc_joint joint = {
@@ -660,6 +730,7 @@ TCase *kinematic_chain_test()
     tcase_add_test(tc, test_kca_ffd);
     tcase_add_test(tc, test_kca_project_inertia);
     tcase_add_test(tc, test_kca_project_wrench);
+    tcase_add_test(tc, test_kca_project_acc_twist);
     tcase_add_test(tc, test_rev_fpk);
     tcase_add_test(tc, test_rev_fvk);
     tcase_add_test(tc, test_rev_fak);
@@ -668,6 +739,7 @@ TCase *kinematic_chain_test()
     tcase_add_test(tc, test_rev_ffd);
     tcase_add_test(tc, test_rev_project_inertia);
     tcase_add_test(tc, test_rev_project_wrench);
+    tcase_add_test(tc, test_rev_project_acc_twist);
     tcase_add_test(tc, test_rev_decomp_e_cstr);
 
     return tc;

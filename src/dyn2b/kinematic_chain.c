@@ -149,6 +149,33 @@ void kca_project_wrench(
 }
 
 
+void kca_project_acc_twist(
+        const struct kca_joint *joint,
+        const struct ma_abi *m,
+        const struct ga_acc_twist *xdd,
+        struct ga_acc_twist *r)
+{
+    assert(joint);
+    assert(m);
+    assert(xdd);
+    assert(r);
+    assert(xdd != r);
+    assert(m->frame);
+    assert(xdd->frame);
+    assert(m->point == m->frame->origin);
+    assert(xdd->point == xdd->frame->origin);       // screw twist
+    assert(joint->target_body == m->body);
+    assert(joint->target_frame == m->frame);
+    assert(joint->target_body == xdd->target_body);
+    assert(joint->target_frame == xdd->frame);
+
+    r->target_body = xdd->target_body;
+    r->reference_body = xdd->reference_body;
+    r->point = xdd->point;
+    r->frame = xdd->frame;
+}
+
+
 static void rev_fpk(
         const struct kcc_joint *joint,
         const joint_position *q,
@@ -431,6 +458,42 @@ static void rev_project_wrench(
 }
 
 
+static void rev_project_acc_twist(
+        const struct kcc_joint *joint,
+        const struct mc_abi *m,
+        const struct gc_acc_twist *xdd,
+        struct gc_acc_twist *r)
+{
+    assert(joint);
+    assert(m);
+    assert(xdd);
+    assert(r);
+    assert(xdd != r);
+
+    int k = joint->revolute_joint.axis;
+
+    double d = m->second_moment_of_mass.row[k].data[k]
+            + joint->revolute_joint.inertia[0];
+    assert(d != 0.0);
+
+    double tau = 0.0;
+
+    for (int i = 0; i < 3; i++) {
+        double m2 = m->second_moment_of_mass.row[i].data[k];
+        double wd = xdd->angular_acceleration[0].data[i];
+        tau += m2 * wd;
+        r->angular_acceleration[0].data[i] = wd;
+
+        double m1 = m->first_moment_of_mass.row[i].data[k];
+        double vd = xdd->linear_acceleration[0].data[i];
+        tau += m1 * vd;
+        r->linear_acceleration[0].data[i] = vd;
+    }
+
+    r->angular_acceleration[0].data[k] -= tau / d;
+}
+
+
 static void rev_decomp_e_cstr(
         const struct kcc_joint *joint,
         const struct mc_abi *m,
@@ -467,6 +530,7 @@ const struct kcc_joint_operators kcc_joint[] = {
         .ffd = rev_ffd,
         .project_inertia = rev_project_inertia,
         .project_wrench = rev_project_wrench,
+        .project_acc_twist = rev_project_acc_twist,
         .decomp_e_cstr = rev_decomp_e_cstr
     }
 };
