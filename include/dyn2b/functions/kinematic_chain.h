@@ -104,6 +104,17 @@ void kca_project_acc_twist(
         const struct ga_acc_twist *xdd,
         struct ga_acc_twist *r);
 
+/**
+ * Map two wrenches to acceleration energy (ADT).
+ *
+ * E = F_1^T S D^{-1} S^T F_2
+ */
+void kca_cart_force_to_eacc(
+        const struct kca_joint *joint,
+        const struct ma_abi *m,
+        const struct ma_wrench *f1,
+        const struct ma_wrench *f2);
+
 
 struct kcc_joint_operators
 {
@@ -204,6 +215,21 @@ struct kcc_joint_operators
             const struct mc_abi *m,
             const struct gc_acc_twist *xdd,
             struct gc_acc_twist *r);
+
+    /**
+     * Map two arrays of wrenches (with <count_f1> and <count_f2> elements,
+     * respectively) to an array of acceleration energy (coordinates).
+     *
+     * E[i,j] = F_1^T[i] S D^{-1} S^T F_2[j]
+     */
+    void (*cart_force_to_eacc)(
+            const struct kcc_joint *joint,
+            const struct mc_abi *m,
+            const struct mc_wrench *f1,
+            const struct mc_wrench *f2,
+            mc_eacc *e,
+            int count_f1,
+            int count_f2);
 
     /**
      * Decompose auto constraint energy.

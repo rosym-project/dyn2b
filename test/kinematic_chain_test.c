@@ -196,6 +196,15 @@ START_TEST(test_kca_project_acc_twist)
 END_TEST
 
 
+START_TEST(test_kca_cart_force_to_eacc)
+{
+    struct ga_acc_twist xdd;
+
+    kca_cart_force_to_eacc(&ja, &ma, &fa, &fa);
+}
+END_TEST
+
+
 START_TEST(test_rev_fpk)
 {
     struct kcc_joint joint = { .type = JOINT_TYPE_REVOLUTE };
@@ -661,6 +670,42 @@ START_TEST(test_rev_project_acc_twist)
 END_TEST
 
 
+START_TEST(test_rev_cart_force_to_eacc)
+{
+    struct kcc_joint joint = {
+        .type = JOINT_TYPE_REVOLUTE,
+        .revolute_joint.inertia = (double [1]) { 3.0 }
+    };
+    struct mc_wrench f = {
+        .torque = (struct vector3 [1]) { { 1.0, 2.0, 3.0 } },
+        .force = (struct vector3 [1]) { { 2.0, 3.0, 4.0 } }
+    };
+    mc_eacc r[2] = { 0.0, 0.0 };
+
+
+    joint.revolute_joint.axis = JOINT_AXIS_X;
+    kcc_joint[JOINT_TYPE_REVOLUTE].cart_force_to_eacc(&joint, &mc, &fc, &f,
+            r, 2, 1);
+    ck_assert_flt_eq(r[0], 0.25);
+    ck_assert_flt_eq(r[1], 0.5);
+
+
+    joint.revolute_joint.axis = JOINT_AXIS_Y;
+    kcc_joint[JOINT_TYPE_REVOLUTE].cart_force_to_eacc(&joint, &mc, &fc, &f,
+            r, 2, 1);
+    ck_assert_flt_eq(r[0], 0.8);
+    ck_assert_flt_eq(r[1], 1.6);
+
+
+    joint.revolute_joint.axis = JOINT_AXIS_Z;
+    kcc_joint[JOINT_TYPE_REVOLUTE].cart_force_to_eacc(&joint, &mc, &fc, &f,
+            r, 2, 1);
+    ck_assert_flt_eq(r[0], 1.5);
+    ck_assert_flt_eq(r[1], 3.0);
+}
+END_TEST
+
+
 START_TEST(test_rev_decomp_e_cstr)
 {
     struct kcc_joint joint = {
@@ -731,6 +776,7 @@ TCase *kinematic_chain_test()
     tcase_add_test(tc, test_kca_project_inertia);
     tcase_add_test(tc, test_kca_project_wrench);
     tcase_add_test(tc, test_kca_project_acc_twist);
+    tcase_add_test(tc, test_kca_cart_force_to_eacc);
     tcase_add_test(tc, test_rev_fpk);
     tcase_add_test(tc, test_rev_fvk);
     tcase_add_test(tc, test_rev_fak);
@@ -740,6 +786,7 @@ TCase *kinematic_chain_test()
     tcase_add_test(tc, test_rev_project_inertia);
     tcase_add_test(tc, test_rev_project_wrench);
     tcase_add_test(tc, test_rev_project_acc_twist);
+    tcase_add_test(tc, test_rev_cart_force_to_eacc);
     tcase_add_test(tc, test_rev_decomp_e_cstr);
 
     return tc;

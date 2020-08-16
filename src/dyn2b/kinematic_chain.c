@@ -176,6 +176,31 @@ void kca_project_acc_twist(
 }
 
 
+void kca_cart_force_to_eacc(
+        const struct kca_joint *joint,
+        const struct ma_abi *m,
+        const struct ma_wrench *f1,
+        const struct ma_wrench *f2)
+{
+    assert(joint);
+    assert(m);
+    assert(f1);
+    assert(f2);
+    assert(m->frame);
+    assert(f1->frame);
+    assert(f2->frame);
+    assert(m->point == m->frame->origin);
+    assert(f1->point == f1->frame->origin);         // wrench
+    assert(f2->point == f2->frame->origin);         // wrench
+    assert(joint->target_body == m->body);
+    assert(joint->target_frame == m->frame);
+    assert(joint->target_body == f1->body);
+    assert(joint->target_frame == f1->frame);
+    assert(joint->target_body == f2->body);
+    assert(joint->target_frame == f2->frame);
+}
+
+
 static void rev_fpk(
         const struct kcc_joint *joint,
         const joint_position *q,
@@ -494,6 +519,35 @@ static void rev_project_acc_twist(
 }
 
 
+static void rev_cart_force_to_eacc(
+        const struct kcc_joint *joint,
+        const struct mc_abi *m,
+        const struct mc_wrench *f1,
+        const struct mc_wrench *f2,
+        mc_eacc *e,
+        int count_f1,
+        int count_f2)
+{
+    assert(joint);
+    assert(m);
+    assert(f1);
+    assert(f2);
+    assert(e);
+
+    int k = joint->revolute_joint.axis;
+
+    double d = m->second_moment_of_mass.row[k].data[k]
+            + joint->revolute_joint.inertia[0];
+    assert(d != 0.0);
+
+    la_dger_os(count_f1, count_f2,
+            1.0 / d,
+            &f1->torque[0].data[k], 3,
+            &f2->torque[0].data[k], 3,
+            e, count_f2);
+}
+
+
 static void rev_decomp_e_cstr(
         const struct kcc_joint *joint,
         const struct mc_abi *m,
@@ -531,6 +585,7 @@ const struct kcc_joint_operators kcc_joint[] = {
         .project_inertia = rev_project_inertia,
         .project_wrench = rev_project_wrench,
         .project_acc_twist = rev_project_acc_twist,
+        .cart_force_to_eacc = rev_cart_force_to_eacc,
         .decomp_e_cstr = rev_decomp_e_cstr
     }
 };
