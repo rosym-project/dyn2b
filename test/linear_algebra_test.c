@@ -736,6 +736,29 @@ START_TEST(test_la_dgemm_ntoe)
 END_TEST
 
 
+START_TEST(test_la_dger_os)
+{
+    double x[2] = { 1.0, 2.0 };
+    double y[3] = { 2.0, 3.0, 4.0 };
+    double r[2][3];
+
+    double res[2][3] = { { 4.0,  6.0,  8.0 },
+                         { 8.0, 12.0, 16.0 } };
+
+    la_dger_os(2, 3,
+            2.0,
+            x, 1,
+            y, 1,
+            &r[0][0], 3);
+    for (int i = 0; i < 2; i++) {
+        for (int j = 0; j < 3; j++) {
+            ck_assert_flt_eq(r[i][j], res[i][j]);
+        }
+    }
+}
+END_TEST
+
+
 START_TEST(test_la_dsytrfr_lo)
 {
     double alpha = 0.5;
@@ -910,6 +933,7 @@ TCase *linear_algebra_test()
     tcase_add_test(tc, test_la_dgemm_nnoe);
     tcase_add_test(tc, test_la_dgemm_tnoe);
     tcase_add_test(tc, test_la_dgemm_ntoe);
+    tcase_add_test(tc, test_la_dger_os);
     tcase_add_test(tc, test_la_dsytrfr_lo);
     tcase_add_test(tc, test_la_trsv_lnd);
     tcase_add_test(tc, test_la_trsv_ltd);

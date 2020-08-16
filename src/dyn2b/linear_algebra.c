@@ -481,7 +481,33 @@ void la_dgemm_ntoe(
             for (int k_ = 0; k_ < k; k_++) {
                 dij += alpha * a[i_ * lda + k_] * b[j_ * ldb + k_];
             }
-            d[i_ * ldc + j_] = dij;
+            d[i_ * ldd + j_] = dij;
+        }
+    }
+}
+
+
+void la_dger_os(
+    int m, int n,
+    double alpha,
+    const double *x, int incx,
+    const double *y, int incy,
+    double *a, int lda)
+{
+    assert(a);
+    assert(x);
+    assert(y);
+    assert(a != x);
+    assert(a != y);
+    assert(m >= 0);
+    assert(n >= 0);
+    assert(lda >= 1 && lda >= n);
+    assert(incx > 0);
+    assert(incy > 0);
+
+    for (int i = 0; i < m; i++) {
+        for (int j = 0; j < n; j++) {
+            a[i * lda + j] = alpha * x[i * incx] * y[j * incy];
         }
     }
 }

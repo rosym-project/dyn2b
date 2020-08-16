@@ -391,6 +391,24 @@ void la_dgemm_ntoe(
         double *d, int ldd);
 
 
+/**
+ * Rank-one operation of a general matrix (out-of-place, simple).
+ * A = alpha * x * y^T
+ *
+ * alpha: scalar
+ * A: m x n
+ * x: m x 1
+ * y: n x 1
+ *
+ * Reference:
+ * - https://www.netlib.org/lapack/explore-html/dc/da8/dger_8f.html
+ */
+void la_dger_os(
+    int m, int n,
+    double alpha,
+    const double *x, int incx,
+    const double *y, int incy,
+    double *a, int lda);
 
 /**
  * Rank-one update of a symmetric matrix (lower triangular, out-of-place)
