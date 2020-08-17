@@ -218,6 +218,12 @@ void achd_c()
     s.f_cstr_art[s.nbody].force[3].x = 1.0;
     s.f_cstr_art[s.nbody].force[4].y = 1.0;
     s.f_cstr_art[s.nbody].force[5].z = 1.0;
+    s.e_cstr[0] = 1.0;
+    s.e_cstr[1] = 1.0;
+    s.e_cstr[2] = 1.0;
+    s.e_cstr[3] = 1.0;
+    s.e_cstr[4] = 1.0;
+    s.e_cstr[5] = 1.0;
 
 
     for (int i = 1; i < s.nbody + 1; i++) {
@@ -340,7 +346,19 @@ void achd_c()
 
         // F_{cstr,i-1}^A = {i-1}^X_i* F_{cstr,i}^a
         mc_wrench_tf_tgt_to_ref(&s.x_rel[i - 1], &s.f_cstr_app[i - 1], &s.f_cstr_art[i - 1], NR_CSTR);
+
+
+        // Energy
+        //
+
+        // E_{cstr,i-1}^A = E_{cstr,i}^A + (F_{cstr,i}^A)^T S_i D_i^{-1} S_i^T F_{cstr,i}^A
+        kcc_joint[joint_type].decomp_e_cstr(joint,
+                &s.m_art[i], &s.f_cstr_art[i],
+                s.d_cstr_art[i], s.d_cstr_art[i - 1], NR_CSTR);
     }
+
+    // nu_{cstr} = (E_{cstr,0})^{-1} E_{cstr,N}
+    mc_eacc_balance(s.d_cstr_art[0], s.e_cstr, s.nu_cstr, NR_CSTR);
 
     mc_abi_log(&s.m_art[0]);
     mc_wrench_log(&s.f_bias_art[0], 1);
@@ -389,7 +407,11 @@ void achd_c()
         //
         int k = joint->revolute_joint.axis;
         double d = s.m_art[i].second_moment_of_mass.row[k].data[k] + joint->revolute_joint.inertia[0];
-        s.tau_ctrl[i - 1] = s.tau_ff[i - 1] - s.tau_ff_art[i - 1] - s.tau_bias_art[i - 1] - s.tau_ext_art[i - 1];
+
+        s.tau_cstr[i - 1] = 0.0;
+        for (int j = 0; j < NR_CSTR; j++) s.tau_cstr[i - 1] += s.nu_cstr[j] * s.tau_cstr_art[i - 1][j];
+
+        s.tau_ctrl[i - 1] = s.tau_ff[i - 1] - s.tau_ff_art[i - 1] - s.tau_bias_art[i - 1] - s.tau_ext_art[i - 1] + s.tau_cstr[i - 1];
         s.qdd[i - 1] = s.tau_ctrl[i - 1] / d;
 
 

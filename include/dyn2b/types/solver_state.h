@@ -116,9 +116,13 @@ struct solver_state_c
 
     // acceleration constraint motion driver
     struct mc_wrench *f_cstr;       // constraint force                         [nc]
+    mc_eacc *e_cstr;                // acceleration energy set point            [nc]
     struct mc_wrench *f_cstr_art;   // articulated constraint force             [nbody * nc]
     struct mc_wrench *f_cstr_app;   // apparent constraint force                [nbody * nc]
+    double **d_cstr_art;            // acc. energy due to cstr. force (decomp.) [nbody * nc * nc]
+    double *nu_cstr;                // Lagrange multiplier for cstr. force      [nc]
     joint_torque **tau_cstr_art;    // torque due to art. cstr. force           [nd * nc]
+    joint_torque *tau_cstr;         // cstr. force's contrib. to cstr. torque   [nd]
 
     joint_torque *tau_ctrl;         // joint control torque                     [nd]
 };
