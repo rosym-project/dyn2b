@@ -10,6 +10,18 @@ extern "C" {
 
 
 /**
+ * Add two <m> x <n> arrays of acceleration energy (coordinates).
+ *
+ * E[i,j = E_1[i,j] + E_2[i,j]
+ */
+void mc_eacc_add(
+        const mc_eacc *e1,
+        const mc_eacc *e2,
+        mc_eacc *e,
+        int m,
+        int n);
+
+/**
  * Balance acceleration energy (coordinates).
  *
  * \param decomp The LDL^T decomposition of a <count> x <count> matrix of

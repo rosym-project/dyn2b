@@ -79,6 +79,29 @@ static struct mc_abi mc = {
 };
 
 
+START_TEST(test_mc_eacc_add)
+{
+    double e1[2][3] = {
+        { 1.0, 2.0, 3.0 },
+        { 2.0, 2.0, 4.0 } };
+    double e2[2][3] = {
+        { 2.0, 2.0, 4.0 },
+        { 3.0, 4.0, 3.0 } };
+    double r[2][3];
+    double res[2][3] = {
+        { 3.0, 4.0, 7.0 },
+        { 5.0, 6.0, 7.0 } };
+
+    mc_eacc_add(e1[0], e2[0], r[0], 2, 3);
+    for (int i = 0; i < 2; i++) {
+        for (int j = 0; j < 3; j++) {
+            ck_assert_flt_eq(r[i][j], res[i][j]);
+        }
+    }
+}
+END_TEST
+
+
 START_TEST(test_mc_eacc_balance)
 {
     double d[3][3] = {
@@ -490,6 +513,7 @@ TCase *mechanics_test()
 {
     TCase *tc = tcase_create("Mechanics");
 
+    tcase_add_test(tc, test_mc_eacc_add);
     tcase_add_test(tc, test_mc_eacc_balance);
     tcase_add_test(tc, test_mc_momentum_derive);
     tcase_add_test(tc, test_ma_momentum_derive);
