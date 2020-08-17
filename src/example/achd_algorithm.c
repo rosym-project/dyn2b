@@ -116,6 +116,9 @@ void achd_a()
         // F_{tau,i-1}^A = {i-1}^X_i* F_{tau,i}^a
         ma_wrench_tf_tgt_to_ref(&s.x_rel[i - 1], &s.f_ff_app[i - 1], &s.f_ff_art[i - 1]);
 
+        // tau_{ff,i}^A = S^T F_{ff,i}
+        kca_ifk(joint, &s.f_ff_art[i]);
+
 
         // F_{ext,i}^a = P_i^T F_{ext,i}^A
         kca_project_wrench(joint, &s.m_art[i], &s.f_ext_art[i], &s.f_ext_app[i - 1]);
@@ -126,12 +129,18 @@ void achd_a()
         // F_{ext,i-1}^A += F_{ext,i}^a'
         ma_wrench_add(&s.f_ext_art[i - 1], &s.f_ext_tf[i - 1], &s.f_ext_art[i - 1]);
 
+        // tau_{ext,i}^A = S^T F_{ext,i}
+        kca_ifk(joint, &s.f_ext_art[i]);
+
 
         // F_{cstr,i}^a = P_i^T
         kca_project_wrench(joint, &s.m_art[i], &s.f_cstr_art[i], &s.f_cstr_app[i - 1]);
 
         // F_{cstr,i-1}^A = {i-1}^X_i* F_{cstr,i}^a
         ma_wrench_tf_tgt_to_ref(&s.x_rel[i - 1], &s.f_cstr_app[i - 1], &s.f_cstr_art[i - 1]);
+
+        // tau_{cstr,i}^A' = S^T F_{cstr,i}
+        kca_ifk(joint, &s.f_cstr_art[i]);
 
 
         // Energy
@@ -175,18 +184,6 @@ void achd_a()
 
         // tau_{bias,i} = S^T F_{bias,i}
         kca_ifk(joint, &s.f_bias_nact[i - 1]);
-
-
-        // tau_{ff,i}^A = S^T F_{ff,i}
-        kca_ifk(joint, &s.f_ff_art[i]);
-
-
-        // tau_{ext,i}^A = S^T F_{ext,i}
-        kca_ifk(joint, &s.f_ext_art[i]);
-
-
-        // tau_{cstr,i}^A' = S^T F_{cstr,i}
-        kca_ifk(joint, &s.f_cstr_art[i]);
 
 
         // Resultant acceleration
@@ -343,6 +340,9 @@ void achd_c()
         // F_{tau,i-1}^A = {i-1}^X_i* F_{tau,i}^a
         mc_wrench_tf_tgt_to_ref(&s.x_rel[i - 1], &s.f_ff_app[i - 1], &s.f_ff_art[i - 1], 1);
 
+        // tau_{ff,i}^A = S^T F_{ff,i}
+        kcc_joint[joint_type].ifk(joint, &s.f_ff_art[i], &s.tau_ff_art[i - 1], 1);
+
 
         // F_{ext,i}^a = P_i^T F_{ext,i}^A
         kcc_joint[joint_type].project_wrench(joint, &s.m_art[i], &s.f_ext_art[i], &s.f_ext_app[i - 1], 1);
@@ -353,12 +353,18 @@ void achd_c()
         // F_{ext,i-1}^A += F_{ext,i}^a'
         mc_wrench_add(&s.f_ext_art[i - 1], &s.f_ext_tf[i - 1], &s.f_ext_art[i - 1], 1);
 
+        // tau_{ext,i}^A = S^T F_{ext,i}
+        kcc_joint[joint_type].ifk(joint, &s.f_ext_art[i], &s.tau_ext_art[i - 1], 1);
+
 
         // F_{cstr,i}^a = P_i^T
         kcc_joint[joint_type].project_wrench(joint, &s.m_art[i], &s.f_cstr_art[i], &s.f_cstr_app[i - 1], NR_CSTR);
 
         // F_{cstr,i-1}^A = {i-1}^X_i* F_{cstr,i}^a
         mc_wrench_tf_tgt_to_ref(&s.x_rel[i - 1], &s.f_cstr_app[i - 1], &s.f_cstr_art[i - 1], NR_CSTR);
+
+        // tau_{cstr,i}^A' = S^T F_{cstr,i}
+        kcc_joint[joint_type].ifk(joint, &s.f_cstr_art[i], s.tau_cstr_art[i - 1], NR_CSTR);
 
 
         // Energy
@@ -421,18 +427,6 @@ void achd_c()
 
         // tau_{bias,i}^A = S^T F_{bias,i}
         kcc_joint[joint_type].ifk(joint, &s.f_bias_nact[i - 1], &s.tau_bias_art[i - 1], 1);
-
-
-        // tau_{ff,i}^A = S^T F_{ff,i}
-        kcc_joint[joint_type].ifk(joint, &s.f_ff_art[i], &s.tau_ff_art[i - 1], 1);
-
-
-        // tau_{ext,i}^A = S^T F_{ext,i}
-        kcc_joint[joint_type].ifk(joint, &s.f_ext_art[i], &s.tau_ext_art[i - 1], 1);
-
-
-        // tau_{cstr,i}^A' = S^T F_{cstr,i}
-        kcc_joint[joint_type].ifk(joint, &s.f_cstr_art[i], s.tau_cstr_art[i - 1], NR_CSTR);
 
 
         // Solve
