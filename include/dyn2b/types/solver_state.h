@@ -112,7 +112,10 @@ struct solver_state_c
     struct mc_wrench *f_ext_art;    // articulated external force               [nbody]
     struct mc_wrench *f_ext_app;    // apparent external force                  [nbody]
     struct mc_wrench *f_ext_tf;     // tf'ed apparent external force            [nbody]
+    mc_eacc **e_ext_art;            // acc. energy due to ext. force            [nbody * nc]
+    double *nu_ext;                 // Lagrange multiplier for ext. force       [nc]
     joint_torque *tau_ext_art;      // torque due to art. external force        [nd]
+    joint_torque *tau_ext_cstr;     // ext. force's contrib. to cstr. torque    [nd]
 
     // acceleration constraint motion driver
     struct mc_wrench *f_cstr;       // constraint force                         [nc]

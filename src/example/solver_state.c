@@ -55,12 +55,15 @@ void setup_simple_state_c(
     s->f_ff_jnt   = calloc(NR_SEGMENTS, sizeof(struct mc_wrench));
     s->tau_ff_art = calloc(s->nd, sizeof(joint_torque));
     // External force
-    s->tau_ff      = calloc(s->nd, sizeof(joint_torque));
-    s->f_ext       = calloc(NR_SEGMENTS, sizeof(struct mc_wrench));
-    s->f_ext_art   = calloc(NR_SEGMENTS_WITH_BASE, sizeof(struct mc_wrench));
-    s->f_ext_app   = calloc(NR_SEGMENTS, sizeof(struct mc_wrench));
-    s->f_ext_tf    = calloc(NR_SEGMENTS, sizeof(struct mc_wrench));
-    s->tau_ext_art = calloc(s->nd, sizeof(joint_torque));
+    s->tau_ff       = calloc(s->nd, sizeof(joint_torque));
+    s->f_ext        = calloc(NR_SEGMENTS, sizeof(struct mc_wrench));
+    s->f_ext_art    = calloc(NR_SEGMENTS_WITH_BASE, sizeof(struct mc_wrench));
+    s->f_ext_app    = calloc(NR_SEGMENTS, sizeof(struct mc_wrench));
+    s->f_ext_tf     = calloc(NR_SEGMENTS, sizeof(struct mc_wrench));
+    s->e_ext_art    = calloc(NR_SEGMENTS_WITH_BASE, sizeof(mc_eacc *));
+    s->nu_ext       = calloc(NR_CSTR, sizeof(double));
+    s->tau_ext_art  = calloc(s->nd, sizeof(joint_torque));
+    s->tau_ext_cstr = calloc(s->nd, sizeof(joint_torque));
     // Constraint force
     s->f_cstr_art   = calloc(NR_SEGMENTS_WITH_BASE, sizeof(struct ma_wrench));
     s->f_cstr_app   = calloc(NR_SEGMENTS, sizeof(struct ma_wrench));
@@ -149,6 +152,7 @@ void setup_simple_state_c(
         // External force
         s->f_ext_art[i].torque = calloc(1, sizeof(struct vector3));
         s->f_ext_art[i].force  = calloc(1, sizeof(struct vector3));
+        s->e_ext_art[i]        = calloc(NR_CSTR * 1, sizeof(mc_eacc));
         // Constraint force
         s->f_cstr_art[i].torque = calloc(NR_CSTR, sizeof(struct vector3));
         s->f_cstr_art[i].force  = calloc(NR_CSTR, sizeof(struct vector3));

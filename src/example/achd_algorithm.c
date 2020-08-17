@@ -137,6 +137,10 @@ void achd_a()
         // Energy
         //
 
+        // E_{ext,i}^A' = (F_{cstr,i}^A)^T S_i D_i^{-1} S_i^T F_{ext,i}^A
+        kca_cart_force_to_eacc(joint, &s.m_art[i],
+                &s.f_cstr_art[i], &s.f_ext_art[i]);
+
 
         // E_{cstr,i}^A' = (F_{cstr,i}^A)^T S_i D_i^{-1} S_i^T F_{cstr,i}^A
         kca_cart_force_to_eacc(joint, &s.m_art[i],
@@ -360,6 +364,14 @@ void achd_c()
         // Energy
         //
 
+        // E_{ext,i}^A' = (F_{cstr,i}^A)^T S_i D_i^{-1} S_i^T F_{ext,i}^A
+        kcc_joint[joint_type].cart_force_to_eacc(joint, &s.m_art[i],
+                &s.f_cstr_art[i], &s.f_ext_art[i], s.e_ext_art[i - 1], NR_CSTR, 1);
+
+        // E_{ext,i-1}^A = E_{ext,i}^A - E_{ext,i}^A'
+        mc_eacc_sub(s.e_ext_art[i], s.e_ext_art[i - 1], s.e_ext_art[i - 1], NR_CSTR, 1);
+
+
         // E_{cstr,i}^A' = (F_{cstr,i}^A)^T S_i D_i^{-1} S_i^T F_{cstr,i}^A
         kcc_joint[joint_type].cart_force_to_eacc(joint, &s.m_art[i],
                 &s.f_cstr_art[i], &s.f_cstr_art[i], s.e_cstr_art[i - 1],
@@ -373,6 +385,9 @@ void achd_c()
                 &s.m_art[i], &s.f_cstr_art[i],
                 s.d_cstr_art[i], s.d_cstr_art[i - 1], NR_CSTR);
     }
+
+    // nu_{ext} = (E_{cstr,0})^{-1} E_{ext,0}
+    mc_eacc_balance(s.d_cstr_art[0], s.e_ext_art[0], s.nu_ext, NR_CSTR);
 
     // nu_{cstr} = (E_{cstr,0})^{-1} E_{cstr,N}
     mc_eacc_balance(s.d_cstr_art[0], s.e_cstr, s.nu_cstr, NR_CSTR);
@@ -425,10 +440,16 @@ void achd_c()
         int k = joint->revolute_joint.axis;
         double d = s.m_art[i].second_moment_of_mass.row[k].data[k] + joint->revolute_joint.inertia[0];
 
+        // tau_{ext,cstr,i}^A = tau_{cstr,i}^A' * nu_{ext}
+        // tau_{cstr,i}^A = tau_{cstr,i}^A' * nu_{cstr}
+        s.tau_ext_cstr[i - 1] = 0.0;
         s.tau_cstr[i - 1] = 0.0;
-        for (int j = 0; j < NR_CSTR; j++) s.tau_cstr[i - 1] += s.nu_cstr[j] * s.tau_cstr_art[i - 1][j];
+        for (int j = 0; j < NR_CSTR; j++) {
+            s.tau_ext_cstr[i - 1] += s.tau_cstr_art[i - 1][j] * s.nu_ext[j];
+            s.tau_cstr[i - 1] += s.tau_cstr_art[i - 1][j] * s.nu_cstr[j];
+        }
 
-        s.tau_ctrl[i - 1] = s.tau_ff[i - 1] - s.tau_ff_art[i - 1] - s.tau_bias_art[i - 1] - s.tau_ext_art[i - 1] + s.tau_cstr[i - 1];
+        s.tau_ctrl[i - 1] = s.tau_ff[i - 1] - s.tau_ff_art[i - 1] - s.tau_bias_art[i - 1] - s.tau_ext_art[i - 1] + s.tau_ext_cstr[i - 1] + s.tau_cstr[i - 1];
         s.qdd[i - 1] = s.tau_ctrl[i - 1] / d;
 
 
