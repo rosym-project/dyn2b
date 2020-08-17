@@ -125,6 +125,82 @@ START_TEST(test_la_dgeadd_os)
 END_TEST
 
 
+START_TEST(test_la_dgeadd_oe)
+{
+    struct matrix3x3 c = {
+        .row_x = { 1.0, 2.0, 3.0 },
+        .row_y = { 4.0, 5.0, 6.0 },
+        .row_z = { 7.0, 8.0, 9.0 } };
+
+    struct matrix3x3 r1 = {
+        .row_x = {  4.0,  7.0, 10.0 },
+        .row_y = { 13.0, 16.0, 19.0 },
+        .row_z = { 22.0, 25.0, 28.0 } };
+
+
+    // Operate in in-place mode
+    la_dgeadd_oe(3, 3, 2.0,
+            (double *)&c, 3,
+            (double *)&mat_b, 3,
+            (double *)&c, 3);
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            ck_assert_flt_eq(c.row[i].data[j], r1.row[i].data[j]);
+        }
+    }
+
+
+    // Operate in out-of-place mode
+    la_dgeadd_oe(3, 3, 2.0,
+            (double *)&mat_a, 3,
+            (double *)&mat_b, 3,
+            (double *)&c, 3);
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            ck_assert_flt_eq(c.row[i].data[j], r1.row[i].data[j]);
+        }
+    }
+
+    struct matrix3x3 r2 = {
+        .row_x = {  3.0,  6.0,  9.0 },
+        .row_y = { 12.0, 15.0, 18.0 },
+        .row_z = { 21.0, 24.0, 27.0 } };
+
+    la_dgeadd_oe(3, 3, 2.0,
+            (double *)&mat_a, 3,
+            (double *)&mat_a, 3,
+            (double *)&c, 3);
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            ck_assert_flt_eq(c.row[i].data[j], r2.row[i].data[j]);
+        }
+    }
+
+    // Non-square matrix
+    double a[2][3] = {
+        { 1.0, 2.0, 3.0 },
+        { 2.0, 2.0, 4.0 } };
+    double b[2][3] = {
+        { 2.0, 2.0, 4.0 },
+        { 3.0, 4.0, 3.0 } };
+    double r[2][3];
+    double r3[2][3] = {
+        { 4.0, 6.0, 10.0 },
+        { 7.0, 8.0, 11.0 } };
+
+    la_dgeadd_oe(2, 3, 2.0,
+            a[0], 3,
+            b[0], 3,
+            r[0], 3);
+    for (int i = 0; i < 2; i++) {
+        for (int j = 0; j < 3; j++) {
+            ck_assert_flt_eq(r[i][j], r3[i][j]);
+        }
+    }
+}
+END_TEST
+
+
 START_TEST(test_la_dgeadd_is)
 {
     struct matrix3x3 c = {
@@ -916,6 +992,7 @@ TCase *linear_algebra_test()
     tcase_add_test(tc, test_la_dscal_o);
     tcase_add_test(tc, test_la_dscal_i);
     tcase_add_test(tc, test_la_dgeadd_os);
+    tcase_add_test(tc, test_la_dgeadd_oe);
     tcase_add_test(tc, test_la_dgeadd_is);
     tcase_add_test(tc, test_la_daxpy_oe);
     tcase_add_test(tc, test_la_daxpy_ie);

@@ -52,6 +52,28 @@ void la_dgeadd_os(
 }
 
 
+void la_dgeadd_oe(
+        int m, int n,
+        double alpha,
+        const double *a, int lda,
+        const double *b, int ldb,
+        double *c, int ldc)
+{
+    assert(a);
+    assert(b);
+    assert(c);
+    assert(lda >= 1 && lda >= n);
+    assert(ldb >= 1 && ldb >= n);
+    assert(ldc >= 1 && ldc >= n);
+
+    for (int i = 0; i < m; i++) {
+        for (int j = 0; j < n; j++) {
+            c[i * ldc + j] = alpha * a[i * lda + j] + b[i * ldb + j];
+        }
+    }
+}
+
+
 void la_dgeadd_is(
         int m, int n,
         const double *a, int lda,

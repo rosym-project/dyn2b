@@ -75,6 +75,27 @@ void la_dgeadd_os(
         double *c, int ldc);
 
 /**
+ * General matrix addition (out-of-place, extended)
+ * C = alpha * A + B
+ *
+ * alpha: scalar
+ * A: m x n
+ * B: m x n
+ * C: m x n
+ *
+ * Reference:
+ * - https://icl.cs.utk.edu/projectsfiles/magma/doxygen/group__magma__geadd.html
+ * - https://github.com/xianyi/OpenBLAS/blob/develop/kernel/generic/geadd.c
+ * - https://github.com/flame/blis/blob/master/docs/BLISTypedAPI.md#addm
+ */
+void la_dgeadd_oe(
+        int m, int n,
+        double alpha,
+        const double *a, int lda,
+        const double *b, int ldb,
+        double *c, int ldc);
+
+/**
  * General matrix addition (in-place, simple)
  * B = A + B
  * 
