@@ -67,8 +67,8 @@ START_TEST(test_la_dgeadd_os)
             (double *)&c, 3,
             (double *)&mat_b, 3,
             (double *)&c, 3);
-    for (int i = 0; i < 2; i++) {
-        for (int j = 0; j < 1; j++) {
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
             ck_assert_flt_eq(c.row[i].data[j], r1.row[i].data[j]);
         }
     }
@@ -79,8 +79,8 @@ START_TEST(test_la_dgeadd_os)
             (double *)&mat_a, 3,
             (double *)&mat_b, 3,
             (double *)&c, 3);
-    for (int i = 0; i < 2; i++) {
-        for (int j = 0; j < 1; j++) {
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
             ck_assert_flt_eq(c.row[i].data[j], r1.row[i].data[j]);
         }
     }
@@ -94,9 +94,31 @@ START_TEST(test_la_dgeadd_os)
             (double *)&mat_a, 3,
             (double *)&mat_a, 3,
             (double *)&c, 3);
-    for (int i = 0; i < 2; i++) {
-        for (int j = 0; j < 1; j++) {
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
             ck_assert_flt_eq(c.row[i].data[j], r2.row[i].data[j]);
+        }
+    }
+
+    // Non-square matrix
+    double a[2][3] = {
+        { 1.0, 2.0, 3.0 },
+        { 2.0, 2.0, 4.0 } };
+    double b[2][3] = {
+        { 2.0, 2.0, 4.0 },
+        { 3.0, 4.0, 3.0 } };
+    double r[2][3];
+    double r3[2][3] = {
+        { 3.0, 4.0, 7.0 },
+        { 5.0, 6.0, 7.0 } };
+
+    la_dgeadd_os(2, 3,
+            a[0], 3,
+            b[0], 3,
+            r[0], 3);
+    for (int i = 0; i < 2; i++) {
+        for (int j = 0; j < 3; j++) {
+            ck_assert_flt_eq(r[i][j], r3[i][j]);
         }
     }
 }
@@ -122,6 +144,26 @@ START_TEST(test_la_dgeadd_is)
     for (int i = 0; i < 2; i++) {
         for (int j = 0; j < 1; j++) {
             ck_assert_flt_eq(c.row[i].data[j], r1.row[i].data[j]);
+        }
+    }
+
+    // Non-square matrix
+    double a[2][3] = {
+        { 1.0, 2.0, 3.0 },
+        { 2.0, 2.0, 4.0 } };
+    double b[2][3] = {
+        { 2.0, 2.0, 4.0 },
+        { 3.0, 4.0, 3.0 } };
+    double r2[2][3] = {
+        { 3.0, 4.0, 7.0 },
+        { 5.0, 6.0, 7.0 } };
+
+    la_dgeadd_is(2, 3,
+            a[0], 3,
+            b[0], 3);
+    for (int i = 0; i < 2; i++) {
+        for (int j = 0; j < 3; j++) {
+            ck_assert_flt_eq(b[i][j], r2[i][j]);
         }
     }
 }

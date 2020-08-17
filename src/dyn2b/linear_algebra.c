@@ -43,8 +43,8 @@ void la_dgeadd_os(
     assert(ldb >= 1 && ldb >= n);
     assert(ldc >= 1 && ldc >= n);
 
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < m; j++) {
+    for (int i = 0; i < m; i++) {
+        for (int j = 0; j < n; j++) {
             c[i * ldc + j] = a[i * lda + j] + b[i * ldb + j];
         }
     }
@@ -61,8 +61,8 @@ void la_dgeadd_is(
     assert(lda >= 1 && lda >= n);
     assert(ldb >= 1 && ldb >= n);
 
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < m; j++) {
+    for (int i = 0; i < m; i++) {
+        for (int j = 0; j < n; j++) {
             b[i * ldb + j] += a[i * lda + j];
         }
     }
