@@ -24,6 +24,24 @@ void mc_eacc_add(
 }
 
 
+void mc_eacc_sub(
+        const mc_eacc *e1,
+        const mc_eacc *e2,
+        mc_eacc *e,
+        int m,
+        int n)
+{
+    assert(e1);
+    assert(e2);
+    assert(e);
+
+    la_dgeadd_oe(m, n, -1.0,
+            e2, n,
+            e1, n,
+            e, n);
+}
+
+
 void mc_eacc_balance(
         const double *decomp,
         const mc_eacc *e,
