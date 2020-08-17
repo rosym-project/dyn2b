@@ -119,6 +119,7 @@ struct solver_state_c
     mc_eacc *e_cstr;                // acceleration energy set point            [nc]
     struct mc_wrench *f_cstr_art;   // articulated constraint force             [nbody * nc]
     struct mc_wrench *f_cstr_app;   // apparent constraint force                [nbody * nc]
+    mc_eacc **e_cstr_art;           // acc. energy due to cstr. force           [nbody * nc * nc]
     double **d_cstr_art;            // acc. energy due to cstr. force (decomp.) [nbody * nc * nc]
     double *nu_cstr;                // Lagrange multiplier for cstr. force      [nc]
     joint_torque **tau_cstr_art;    // torque due to art. cstr. force           [nd * nc]

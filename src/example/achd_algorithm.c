@@ -132,6 +132,15 @@ void achd_a()
 
         // F_{cstr,i-1}^A = {i-1}^X_i* F_{cstr,i}^a
         ma_wrench_tf_tgt_to_ref(&s.x_rel[i - 1], &s.f_cstr_app[i - 1], &s.f_cstr_art[i - 1]);
+
+
+        // Energy
+        //
+
+
+        // E_{cstr,i}^A' = (F_{cstr,i}^A)^T S_i D_i^{-1} S_i^T F_{cstr,i}^A
+        kca_cart_force_to_eacc(joint, &s.m_art[i],
+                &s.f_cstr_art[i], &s.f_cstr_art[i]);
     }
 
     ma_abi_log(&s.m_art[0]);
@@ -350,6 +359,14 @@ void achd_c()
 
         // Energy
         //
+
+        // E_{cstr,i}^A' = (F_{cstr,i}^A)^T S_i D_i^{-1} S_i^T F_{cstr,i}^A
+        kcc_joint[joint_type].cart_force_to_eacc(joint, &s.m_art[i],
+                &s.f_cstr_art[i], &s.f_cstr_art[i], s.e_cstr_art[i - 1],
+                NR_CSTR, NR_CSTR);
+
+        // E_{cstr,i-1}^A = E_{cstr,i}^A + E_{cstr,i}^A'
+        mc_eacc_add(s.e_cstr_art[i], s.e_cstr_art[i - 1], s.e_cstr_art[i - 1], NR_CSTR, NR_CSTR);
 
         // E_{cstr,i-1}^A = E_{cstr,i}^A + (F_{cstr,i}^A)^T S_i D_i^{-1} S_i^T F_{cstr,i}^A
         kcc_joint[joint_type].decomp_e_cstr(joint,

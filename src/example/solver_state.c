@@ -64,6 +64,7 @@ void setup_simple_state_c(
     // Constraint force
     s->f_cstr_art   = calloc(NR_SEGMENTS_WITH_BASE, sizeof(struct ma_wrench));
     s->f_cstr_app   = calloc(NR_SEGMENTS, sizeof(struct ma_wrench));
+    s->e_cstr_art   = calloc(NR_SEGMENTS_WITH_BASE, sizeof(mc_eacc *));
     s->d_cstr_art   = calloc(NR_SEGMENTS_WITH_BASE, sizeof(double *));
     s->nu_cstr      = calloc(NR_CSTR, sizeof(double));
     s->e_cstr       = calloc(NR_CSTR, sizeof(mc_eacc));
@@ -151,6 +152,7 @@ void setup_simple_state_c(
         // Constraint force
         s->f_cstr_art[i].torque = calloc(NR_CSTR, sizeof(struct vector3));
         s->f_cstr_art[i].force  = calloc(NR_CSTR, sizeof(struct vector3));
+        s->e_cstr_art[i]        = calloc(NR_CSTR * NR_CSTR, sizeof(mc_eacc));
         s->d_cstr_art[i]        = calloc(NR_CSTR * NR_CSTR, sizeof(double));
     }
 
