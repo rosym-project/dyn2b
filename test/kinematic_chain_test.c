@@ -591,6 +591,63 @@ START_TEST(test_rev_project_wrench)
 END_TEST
 
 
+START_TEST(test_rev_decomp_e_cstr)
+{
+    struct kcc_joint joint = {
+        .type = JOINT_TYPE_REVOLUTE,
+        .revolute_joint.inertia = (double [1]) { 3.0 }
+    };
+    double e_cstr_a[2][2] = {
+        { 2.0, 5.0 },
+        { 5.0, 3.0 } };
+    double r[2][2];
+
+
+    double res_x[2][2] = {
+        { 2.25   , 4.66667 },
+        { 4.66667, 5.0     } };
+
+    joint.revolute_joint.axis = JOINT_AXIS_X;
+    kcc_joint[JOINT_TYPE_REVOLUTE].decomp_e_cstr(&joint, &mc, &fc,
+            &e_cstr_a[0][0], &r[0][0], 2);
+    for (int i = 0; i < 2; i++) {
+        for (int j = 0; j < 2; j++) {
+            ck_assert_flt_eq(r[i][j], res_x[i][j]);
+        }
+    }
+
+
+    double res_y[2][2] = {
+        { 2.8    , 4.14286 },
+        { 4.14286, 8.14286 } };
+
+    joint.revolute_joint.axis = JOINT_AXIS_Y;
+    kcc_joint[JOINT_TYPE_REVOLUTE].decomp_e_cstr(&joint, &mc, &fc,
+            &e_cstr_a[0][0], &r[0][0], 2);
+    for (int i = 0; i < 2; i++) {
+        for (int j = 0; j < 2; j++) {
+            ck_assert_flt_eq(r[i][j], res_y[i][j]);
+        }
+    }
+
+
+    double res_z[2][2] = {
+        { 3.5    , 3.71429 },
+        { 3.71429, 10.7143 } };
+
+    joint.revolute_joint.axis = JOINT_AXIS_Z;
+    kcc_joint[JOINT_TYPE_REVOLUTE].decomp_e_cstr(&joint, &mc, &fc,
+            &e_cstr_a[0][0], &r[0][0], 2);
+    for (int i = 0; i < 2; i++) {
+        for (int j = 0; j < 2; j++) {
+            ck_assert_flt_eq(r[i][j], res_z[i][j]);
+        }
+    }
+}
+END_TEST
+
+
+
 TCase *kinematic_chain_test()
 {
     TCase *tc = tcase_create("KinematicChain");
@@ -611,6 +668,7 @@ TCase *kinematic_chain_test()
     tcase_add_test(tc, test_rev_ffd);
     tcase_add_test(tc, test_rev_project_inertia);
     tcase_add_test(tc, test_rev_project_wrench);
+    tcase_add_test(tc, test_rev_decomp_e_cstr);
 
     return tc;
 }

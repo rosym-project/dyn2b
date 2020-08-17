@@ -1,5 +1,6 @@
 #include <dyn2b/functions/kinematic_chain.h>
 #include <dyn2b/functions/geometry.h>
+#include <dyn2b/functions/linear_algebra.h>
 #include <math.h>
 #include <string.h>
 #include <assert.h>
@@ -430,6 +431,32 @@ static void rev_project_wrench(
 }
 
 
+static void rev_decomp_e_cstr(
+        const struct kcc_joint *joint,
+        const struct mc_abi *m,
+        const struct mc_wrench *f,
+        double *d_cstr,
+        double *r,
+        int count)
+{
+    assert(joint);
+    assert(m);
+    assert(f);
+    assert(r);
+
+    int k = joint->revolute_joint.axis;
+
+    double d = m->second_moment_of_mass.row[k].data[k]
+            + joint->revolute_joint.inertia[0];
+    assert(d != 0.0);
+
+    la_dsytrfr_lo(count,
+            1.0 / d, &f->torque[0].data[k], 3,
+            d_cstr, count,
+            r, count);
+}
+
+
 const struct kcc_joint_operators kcc_joint[] = {
     [JOINT_TYPE_REVOLUTE] = {
         .fpk = rev_fpk,
@@ -439,6 +466,7 @@ const struct kcc_joint_operators kcc_joint[] = {
         .ifk = rev_ifk,
         .ffd = rev_ffd,
         .project_inertia = rev_project_inertia,
-        .project_wrench = rev_project_wrench
+        .project_wrench = rev_project_wrench,
+        .decomp_e_cstr = rev_decomp_e_cstr
     }
 };

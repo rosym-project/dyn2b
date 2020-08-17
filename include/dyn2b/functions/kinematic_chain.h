@@ -182,6 +182,19 @@ struct kcc_joint_operators
             const struct mc_wrench *f,
             struct mc_wrench *r,
             int count);
+
+    /**
+     * Decompose auto constraint energy.
+     *
+     * E_cstr^A + (F_cstr^A)^T S D^{-1} S^T F_cstr^A
+     */
+    void (*decomp_e_cstr)(
+            const struct kcc_joint *joint,
+            const struct mc_abi *m,
+            const struct mc_wrench *f,
+            double *d_cstr,
+            double *r,
+            int count);
 };
 
 
