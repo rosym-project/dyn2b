@@ -519,6 +519,35 @@ static void rev_project_acc_twist(
 }
 
 
+static void rev_jnt_force_to_eacc(
+        const struct kcc_joint *joint,
+        const struct mc_abi *m,
+        const joint_torque *t1,
+        const joint_torque *t2,
+        mc_eacc *e,
+        int count_t1,
+        int count_t2)
+{
+    assert(joint);
+    assert(m);
+    assert(t1);
+    assert(t2);
+    assert(e);
+
+    int k = joint->revolute_joint.axis;
+
+    double d = m->second_moment_of_mass.row[k].data[k]
+            + joint->revolute_joint.inertia[0];
+    assert(d != 0.0);
+
+    la_dger_os(count_t1, count_t2,
+            1.0 / d,
+            t1, 1,
+            t2, 1,
+            e, count_t2);
+}
+
+
 static void rev_cart_force_to_eacc(
         const struct kcc_joint *joint,
         const struct mc_abi *m,
@@ -585,6 +614,7 @@ const struct kcc_joint_operators kcc_joint[] = {
         .project_inertia = rev_project_inertia,
         .project_wrench = rev_project_wrench,
         .project_acc_twist = rev_project_acc_twist,
+        .jnt_force_to_eacc = rev_jnt_force_to_eacc,
         .cart_force_to_eacc = rev_cart_force_to_eacc,
         .decomp_e_cstr = rev_decomp_e_cstr
     }

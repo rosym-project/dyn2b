@@ -217,6 +217,21 @@ struct kcc_joint_operators
             struct gc_acc_twist *r);
 
     /**
+     * Map two arrays of joint torques (with <count_t1> and <count_t2> elements,
+     * respectively) to an array of acceleration energy (coordinates).
+     *
+     * E[i,j] = tau_1^T[i] D^{-1} tau_2[j]
+     */
+    void (*jnt_force_to_eacc)(
+            const struct kcc_joint *joint,
+            const struct mc_abi *m,
+            const joint_torque *tau_1,
+            const joint_torque *tau_2,
+            mc_eacc *e,
+            int count_t1,
+            int count_t2);
+
+    /**
      * Map two arrays of wrenches (with <count_f1> and <count_f2> elements,
      * respectively) to an array of acceleration energy (coordinates).
      *
