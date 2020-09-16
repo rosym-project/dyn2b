@@ -5,6 +5,7 @@ add_library(dyn2b SHARED
   dyn2b/kinematic_chain.c
 
   dyn2b/geometry_nbx.c
+  dyn2b/kinematic_chain_nbx.c
 )
 
 target_link_libraries(dyn2b m)
