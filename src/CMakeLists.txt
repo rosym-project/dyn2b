@@ -1,4 +1,4 @@
-add_library(dyn2b
+add_library(dyn2b SHARED
   dyn2b/linear_algebra.c
   dyn2b/geometry.c
   dyn2b/mechanics.c
@@ -8,7 +8,7 @@ add_library(dyn2b
 target_link_libraries(dyn2b m)
 
 
-add_library(dyn2b_example
+add_library(dyn2b_example SHARED
   example/solver_state.c
   example/robots/one_dof.c
   example/robots/two_dof.c
@@ -33,6 +33,14 @@ target_link_libraries(ab_algorithm dyn2b_example)
 install(
   TARGETS dyn2b
   EXPORT dyn2b-targets
+  RUNTIME DESTINATION bin
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+)
+
+install(
+  TARGETS dyn2b_example
+  EXPORT dyn2b_example-targets
   RUNTIME DESTINATION bin
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
