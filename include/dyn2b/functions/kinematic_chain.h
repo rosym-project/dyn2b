@@ -9,16 +9,16 @@ extern "C" {
 
 /**
  * Data types to represent rigid body systems (kinematic chains).
- * 
+ *
  * The following naming conventions apply:
  * kcc_*: _c_oordinate representation
- * kcaa_*: _a_bstract data type i.e. the coordinate-independent representation
+ * kca_*: _a_bstract data type i.e. the coordinate-independent representation
  */
 
 
 /**
  * Forward position kinematics (ADT).
- * 
+ *
  * X_J
  */
 void kca_fpk(
@@ -27,7 +27,7 @@ void kca_fpk(
 
 /**
  * Forward velocity kinematics (ADT).
- * 
+ *
  * Xd = S qd
  */
 void kca_fvk(
@@ -98,7 +98,7 @@ struct kcc_joint_operators
 {
     /**
      * Forward position kinematics (coordinates).
-     * 
+     *
      * X_J
      */
     void (*fpk)(
@@ -108,7 +108,7 @@ struct kcc_joint_operators
 
     /**
      * Forward velocity kinematics (coordinates).
-     * 
+     *
      * Xd = S qd
      */
     void (*fvk)(
