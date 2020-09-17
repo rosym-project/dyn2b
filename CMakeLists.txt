@@ -33,4 +33,5 @@ register_package(
     include
   LIBRARIES
     dyn2b
+    dyn2b_example
 )

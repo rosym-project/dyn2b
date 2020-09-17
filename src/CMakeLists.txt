@@ -37,3 +37,11 @@ install(
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
 )
+
+install(
+  TARGETS dyn2b_example
+  EXPORT dyn2b_example-targets
+  RUNTIME DESTINATION bin
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+)
