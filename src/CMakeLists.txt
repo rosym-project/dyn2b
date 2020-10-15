@@ -12,6 +12,7 @@ target_link_libraries(dyn2b m)
 
 
 add_library(dyn2b_example SHARED
+  example/chain_iterator.c
   example/solver_state.c
   example/robots/one_dof.c
   example/robots/two_dof.c
@@ -22,6 +23,9 @@ target_link_libraries(dyn2b_example dyn2b)
 
 add_executable(fpk_algorithm example/fpk_algorithm.c)
 target_link_libraries(fpk_algorithm dyn2b_example)
+
+add_executable(fpk_algorithm_iter example/fpk_algorithm_iter.c)
+target_link_libraries(fpk_algorithm_iter dyn2b_example)
 
 add_executable(fvk_algorithm example/fvk_algorithm.c)
 target_link_libraries(fvk_algorithm dyn2b_example)
